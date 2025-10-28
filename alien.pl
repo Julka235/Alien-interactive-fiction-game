@@ -45,6 +45,8 @@ look :-
         describe(Place),
         nl.
 
+/* These rules describe the various rooms.  Depending on
+   circumstances, a room may have more than one description. */
 
 
 /* Under UNIX, the "halt." command quits Prolog but does not
@@ -52,8 +54,47 @@ look :-
    disappears before the final output can be seen. Hence this
    routine requests the user to perform the final "halt." */
 
-/* This is the description of rooms. */
+/* This rule prints the description of the rooms. */
 
-/* This is the description of characters. */
+rooms :-
+        nl,
+        write('Here is the list of rooms aboard the Nostromo spaceship.'), nl,
+        write('living_quarters      -- where the crew sleeps and eats.'), nl,
+        write('medbay               -- medical bay with an internal isolation space.'), nl,
+        write('storage_bay          -- storage for weapons and canned supplies.'), nl,
+        write('technical_room       -- houes the main computer, MU/TH/ER.'), nl,
+        write('power_room           -- controls the ship\'s entire power system.'), nl,
+        write('shuttle              -- escape vessel for emergency departure.'), nl,
+        nl.
 
-/* These is it display the instruction. */
+/* This rule prints the description of the crew. */
+crew :-
+        nl,
+        write('Here is the list of the members of your crew. If you want to interact with them - use their name in lowercase.'), nl,
+        write('Fluff     -- spaceship\'s cat.'), nl,
+        write('Dallas    -- captain of the Nostromo spaceship.'), nl,
+        write('Lambert   -- navigator.'), nl,
+        write('Walker    -- chief engineer.'), nl,
+        write('Becker    -- executive officer.'), nl,
+        write('Reed      -- science officer.'), nl,
+        nl.
+
+
+/* This rule displays the instruction. */
+instructions :-
+        nl,
+        write('Here is the list of available commands:'), nl,
+        write('start.               -- to start the game.'), nl,
+        write('go(Room).            -- to enter the room.'), nl,
+        write('take(Object).        -- to pick up an object.'), nl,
+        write('look.                -- to look around the room.'), nl,
+        write('investigate(Person). -- to investigate someone.'), nl,
+        write('crew.                -- to see the list of the crew.'), nl,
+        write('rooms.               -- to see the list of the rooms.'), nl,
+        write('instructions.        -- to see this list again.'), nl,
+        write('halt.                -- to end the game and quit.'), nl,
+        nl.
+
+/* This rule starts the game. */
+
+/****** GAME PLOT PART ***************************************************/

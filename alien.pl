@@ -5,6 +5,7 @@
 /* Dynamic variables */
 :- dynamic player_at/1, at/2, holding/1, alive/1.
 :- dynamic counter/1, chosen/1, player_at/1.
+:- dynamic lights_on/0.
 
 player_at(someplace).
 at(thing, someplace).
@@ -41,6 +42,23 @@ go(There) :-
     write('You move from '), write(Here),
     write(' to '), write(There), nl.
 
+    % Print movement message once
+    write('You move from '), write(Here),
+    write(' to '), write(Room), nl,
+
+    % Handle lights
+    ( Room == living_quarters, \+ lights_on ->
+        assert(lights_on),
+        write('The lights flicker back on in the living quarters.'), nl,
+        first_body,
+    ;
+        \+ lights_on ->
+        write('You step into the room and almost trip over something you can’t see. Everything is still pitch black.'), nl
+    ;
+        true
+    ),
+    nl.
+
 /* This rule tells how to look at your surroundings. */
 look :-
     player_at(Place),
@@ -67,12 +85,12 @@ rooms :-
 crew :-
     nl,
     write('Here is the list of the members of your crew. If you want to interact with them - use their name in lowercase.'), nl,
-    write('Fluff     -- spaceship\'s cat.'), nl,
-    write('Dallas    -- captain of the Nostromo spaceship.'), nl,
-    write('Lambert   -- navigator.'), nl,
-    write('Walker    -- chief engineer.'), nl,
-    write('Becker    -- executive officer.'), nl,
-    write('Reed      -- science officer.'), nl,
+    write('Fluff      -- spaceship\'s cat.'), nl,
+    write('Dallas     -- captain of the Nostromo spaceship.'), nl,
+    write('Lambert    -- navigator.'), nl,
+    write('Walker     -- chief engineer.'), nl,
+    write('Becker     -- executive officer.'), nl,
+    write('Reed       -- science officer.'), nl,
     nl.
 
 
@@ -149,9 +167,11 @@ power_off_scene :-
     write('Per Corporate protocol, every minor decision must be logged, so you update the mission report. You stretch and rise from the console, planning to look for the ship’s cat, Fluff.'), nl,
     write('As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it’s cut short.'), nl,
     write('You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.'), nl,
+    retractall(lights_on), 
     nl.
 
-% next move
+first_body :-
+    % TBD
 
 /****** MAIN *************************************************************/
 /* This rule is displayed after executing this file.
@@ -169,7 +189,19 @@ main :-
 
     % set initial values
     assert(player_at(technical_room)),
-    assert(at(thing, someplace)), % TBD - update initializations
+    assert(alive(player)),
+    assert(counter(0)),
+    lights_on,
+
+    % Put stuff & people in places
+    assert(at(fluff, medbay)),
+    assert(at(gun, storage_bay)),
+    assert(at(multitool, medbay)),
+
+
+    % Make sure characters are alive
+
+    assert(at(thing, someplace)),
     assert(alive(player)), % TBD - update characters to be alive
     assert(counter(0)),
     write('Do you want to play a game?'), nl,

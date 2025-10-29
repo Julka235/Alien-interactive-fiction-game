@@ -4,12 +4,14 @@
 
 /* Dynamic variables */
 :- dynamic player_at/1, at/2, holding/1, alive/1.
-:- dynamic counter/1, chosen/1.
+:- dynamic hints_counter/1, chosen/1.
 :- dynamic lights_on/0.
 :- dynamic force_investigation/0.
 :- dynamic investigated/1.
 :- dynamic shuttle_closed/0.
 :- dynamic investigated/1.
+:- dynamic investigated_quarters/0.
+:- dynamic put_used/0.
 
 /* These rules define rooms existence. */
 room(technical_room).
@@ -120,7 +122,13 @@ describe(medbay, Text) :-
         Text = 'Becker’s body is torn apart on the floor, blood pooling in dark, jagged patterns. The black substance spreads across the tiles, darker and thicker than in Dallas’s murder. A faint meowing echoes from a cupboard.'
     ).
 
-describe(living_quarters, 'The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.').
+describe(living_quarters, Text) :-
+    ( \+ investigated_quarters ->
+        assert(investigated_quarters),
+        Text = 'The blood is still spreading across the floor. A strange black substance mixes with it in the wounds. They don’t look human-made - jagged and mangled, as if something with a jaw full of sharp teeth tore them.'
+    ;
+        Text = 'The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.'
+    ).
 
 describe(technical_room, 'The servers hum steadily. MU/TH/ER’s screen glows softly, waiting silently for your next command').
 
@@ -186,7 +194,6 @@ stop :-
 
 /* This rule starts the game. */
 start :-
-    nl,
     write('MU/TH/ER, main spaceship\s computer hums softly when it prints the response on the screen.'), nl,
     write('MU/TH/ER: Hello, Warrant Officer Ripley. Here is the report you requested.'), nl,
     write('Report of Mission 067801'), nl,
@@ -199,25 +206,34 @@ start :-
     write('Type either \'put(medbay).\' or \'put(isolation).\''), nl,
     nl.
 
-/* These rules handle choice mechanism. */
-valid_choice(medbay).
-valid_choice(isolation).
+/* These rules handle put logic. */
+valid_put(medbay).
+valid_put(isolation).
 
 put(X) :-
-    valid_choice(X),
-    retractall(chosen(_)),
-    assert(chosen(X)),
-    handle_choice(X),
-    power_off_scene.
-
-put(X) :-
-    \+ valid_choice(X),        % if choice is invalid
+    \+ valid_put(X),
+    !,
     write('You must choose medbay or isolation.'), nl,
     write('Try again.'), nl,
     true.
 
+put(_) :-
+    put_used,
+    !,
+    write('You already made your choice. It is too late to change it now.'),
+    nl.
+
+put(X) :-
+    retractall(chosen(_)),
+    assert(chosen(X)),
+    handle_choice(X),
+    assert(put_used),
+    power_off_scene.
+
 handle_choice(isolation) :-
-    assert(counter(1)).
+    retract(hints_counter(N)),
+    N1 is N + 1,
+    assert(hints_counter(N1)). 
 
 handle_choice(_) :-
     true.
@@ -241,7 +257,7 @@ first_body :-
     assert(at(lambert, living_quarters)),
     assert(at(reed, living_quarters)),
     write('You step into the living quarters. The lights flicker back on, blinding you for a moment.'), nl,
-    write('A scream cuts through the silence - Lambert\'s. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow.'), nl,
+    write('A scream cuts through the silence - Lambert\'s. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It\'s Dallas - your captain and friend.'), nl,
     write('Only Lambert and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must\'ve restored the power.'), nl,
     write('Reed turns to you, his voice tight. \'You\'re the one in command now, Ripley. What do we do?\''), nl,
     write('Do you look around the room first, or investigate one of the crew members?'),
@@ -292,23 +308,50 @@ investigate(Person) :-
     ( Person == lambert ->
         retract(force_investigation),
         write('\'You were the first here, right, Lambert?\''), nl,
-        write('\'Yeah,\' she says, voice trembling. \'I was walking down the corridor when the power went out. Then I heard the scream and...\' She glances tearfully at Dallas’s body. \'I don’t know who or what could have done this.\''), nl,
+        write('\'Yeah,\' she says, voice trembling. \'I was walking down the corridor when the power went out. Then I heard the scream and...\' She glances tearfully at Dallas’ body. \'I don’t know who or what could have done this.\''), nl,
         write('\'Did you notice anything else?\''), nl,
         write('\'Not much,\' she says, shivering. \'Except for Fluff. The cat ran between my legs just before the scream. He was clearly rattled, yowling and howling.\''), nl,
-        write('Fluff’s instincts were always sharp. If he sensed danger before anyone else... maybe he’s seen what we haven’t.'),
-        nl
+        write('\'Fluff’s instincts were always sharp,\' you think to yourself. \'If he sensed danger before anyone else... maybe he’s seen what we haven’t.\''), nl,
+        walker_joins
 
     ; Person == reed ->
         write('\'What were you doing just now, Reed?\''), nl,
-        write('\'I was running an analysis of Becker’s blood,’ he says. ‘Trying to figure out how to help him… his condition isn’t improving.\''), nl,
-        write('\'Not exactly,\' Reed admits. \'But something’s wrong. His blood is more acidic than normal, and it’s not clotting at all.\''),
+        write('\'I was running an analysis of Becker’s blood,\' he says. \'Trying to figure out how to help him... his condition isn’t improving.\''), nl,
+        write('\'Did you find anything?\''), nl,
+        write('\'Not exactly,\' Reed admits. \'But something’s wrong. His blood is more acidic than normal, and it’s not clotting at all.\''), nl,
+        nl
+    
+    ; Person = walker ->
+        write('\'What do you mean by two people, Walker?\''), nl,
+        ( chosen(medbay) ->
+            write('\'I was fixing the power after it went out,\' he says. \'Then I wanted to go straight to our quarters, but the medbay door was open. There was blood everywhere - Becker\'s blood, I think. I didn\'t want to investigate without you.\''),
+            nl
+        ; chosen(isolation) ->
+            retract(hints_counter(N)),
+            N1 is N + 1,
+            assert(hints_counter(N1)),
+            write('\'I was fixing the power after it went out,\' he says. \'Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere. So I went to check the isolation, and...\''), nl,
+            write('\'Did Becker leave quarantine?\''), nl,
+            write('\'Not exactly,\' Walker replies. \'He’s still in isolation - but he\'s dead, Ripley. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn\'t a malfunction. Someone on the crew must have unlocked the door.\''), nl
+        ; true
+        ),
         nl
 
     ; true
-    ),
-    nl.
+    ).
 
 /* This rule described the scene where chief engineer barges in*/
+
+walker_joins :-
+    assert(at(walker, living_quarters)),
+    write('Before you can decide what to do next,  Walker - chief engineer - bursts in.'), nl,
+    write('\'I fixed the po-\' he stops, startled by Dallas\'s dead body. \'What the hell happened here?\''), nl,
+    write('\'The captain\'s dead,\' Reed says. \'Where have you been?\''), nl,
+    write('\'When the lights went out, I went to the power room to restore them,\' Walker explains. \'I didn’t expect two people to die while I was gone.\''), nl,
+    write('Wait, did he just say two?'), nl,
+    nl.
+
+% THE STORY MUST BE CONTINUED FROM HERE
 
 /****** MAIN *************************************************************/
 /* This rule is displayed after executing this file.
@@ -321,7 +364,7 @@ main :-
     retractall(at(_, _)),
     retractall(holding(_)),
     retractall(alive(_)),
-    retractall(counter(_)),
+    retractall(hints_counter(_)),
     retractall(chosen(_)),
     retractall(investigated(_)),
 
@@ -334,7 +377,7 @@ main :-
     assert(alive(walker)),
     assert(alive(reed)),
     assert(alive(becker)),
-    assert(counter(0)),
+    assert(hints_counter(0)),
     assert(lights_on),
     assert(shuttle_closed),
 

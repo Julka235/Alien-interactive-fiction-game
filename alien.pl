@@ -6,6 +6,9 @@
 :- dynamic player_at/1, at/2, holding/1, alive/1.
 :- dynamic counter/1, chosen/1, player_at/1.
 :- dynamic lights_on/0.
+:- dynamic force_investigation/0.
+:- dynamic investigated/1.
+:- dynamic shuttle_closed/0.
 
 player_at(someplace).
 at(thing, someplace).
@@ -28,45 +31,87 @@ take(_) :-
     write('It is not here.'),
     nl.
 
+/* These rules define rooms existence. */
+room(technical_room).
+room(living_quarters).
+room(medbay).
+room(storage_bay).
+room(power_room).
+room(shuttle).
+
 /* These rules describe how to go someplace. */
 
+% check if room is shuttle and closed
+go(shuttle) :-
+    shuttle_closed,
+    !,
+    write('Cannot enter the shuttle. Only available in case of code red.'), nl.
+
+% check if the room exists
 go(There) :-
-    player_at(There),                 % check if already there
+    \+ room(There),                 
+    !,
+    write('There is no such room as '),
+    write(There), nl,
+    write('To see available rooms type \'rooms.\'').
+
+% check if already in the room
+go(There) :-
+    player_at(There),
     !,
     write('You are already here.'), nl.
 
 go(There) :-
     player_at(Here),
-    retract(player_at(Here)),         % move player
+    retract(player_at(Here)),          % move player
     assert(player_at(There)),
-    write('You move from '), write(Here),
-    write(' to '), write(There), nl.
 
     % Print movement message once
-    write('You move from '), write(Here),
-    write(' to '), write(Room), nl,
+    ( There == medbay ->
+        write('You enter the medbay, noticing the isolation space.'), nl
+    ;   write('You enter the '), write(There), nl
+    ),
 
     % Handle lights
-    ( Room == living_quarters, \+ lights_on ->
-        assert(lights_on),
-        write('The lights flicker back on in the living quarters.'), nl,
-        first_body,
+    ( There == living_quarters, \+ lights_on ->
+        first_body
     ;
         \+ lights_on ->
-        write('You step into the room and almost trip over something you can’t see. Everything is still pitch black.'), nl
+        write('You almost trip over something you can’t see. Everything is still pitch black.'), nl
     ;
         true
     ),
     nl.
 
 /* This rule tells how to look at your surroundings. */
+/* IT CANNOT WORK WHEN LIGHTS TURNED OFF */
 look :-
     player_at(Place),
-    describe(Place),
+    (
+        \+ lights_on ->
+            write('Everything is still pitch black. You can\'t see anything.'), nl
+        ;
+            describe(Place, Text),
+            write(Text), nl
+    ),
     nl.
 
 /* These rules describe the various rooms.  Depending on
    circumstances, a room may have more than one description. */
+describe(medbay, Text) :-
+    ( holding(fluff) ->
+        Text = 'Becker’s body lies torn on the floor, blood pooling in jagged, dark patterns. The black substance coats the tiles, thicker than in Dallas’s murder. Fluff mews softly in your arms, nudging you as if urging you to leave this place.'
+    ;
+        Text = 'Becker’s body is torn apart on the floor, blood pooling in dark, jagged patterns. The black substance spreads across the tiles, darker and thicker than in Dallas’s murder. A faint meowing echoes from a cupboard.'
+    ).
+
+describe(living_quarters, 'The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.').
+
+describe(technical_room, 'The servers hum steadily. MU/TH/ER’s screen glows softly, waiting silently for your next command').
+
+describe(storage_bay, 'Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting.').
+
+describe(power_room, 'The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal.').
 
 /* This rule prints the description of the rooms. */
 
@@ -127,11 +172,12 @@ stop :-
 /* This rule starts the game. */
 start :-
     nl,
+    write('MU/TH/ER, main spaceship\s computer hums softly when it prints the response on the screen.'), nl,
     write('MU/TH/ER: Hello, Warrant Officer Ripley. Here is the report you requested.'), nl,
     write('Report of Mission 067801'), nl,
-    write('Time 9036727h: Corporate command authorizes the spaceship Nostromo to investigate a possible life form on planet 26-Draconis.'),
-    write('Time 9036911h: Nostromo lands on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed leave the ship to investigate.'),
-    write('Time 9036916h: Nostromo loses contact with Executive Officer Becker. Science Officer  Reed reports unsuccessful search attempts.'), nl,
+    write('Time 9036727h: Corporate command authorizes the spaceship Nostromo to investigate a possible life form on planet 26-Draconis.'), nl,
+    write('Time 9036911h: Nostromo lands on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed leave the ship to investigate.'), nl,
+    write('Time 9036916h: Nostromo loses contact with Executive Officer Becker. Science Officer Reed reports unsuccessful search attempts.'), nl,
     write('MU/TH/ER: Anything else I can do for you, Officer?'), nl, nl,
     write('Before you can respond, the main console clears. A new line appears.'), nl,
     write('MU/TH/ER: Science Officer Reed has re-entered the Nostromo carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?'), nl,
@@ -161,17 +207,29 @@ handle_choice(isolation) :-
 handle_choice(_) :-
     true.
 
-/* This rule describes next scene - when power goes down. */
+/* This rule describes power off scene. */
 power_off_scene :-
+    retractall(lights_on),
     write('MU/TH/ER: ... Command sent.'), nl,
     write('Per Corporate protocol, every minor decision must be logged, so you update the mission report. You stretch and rise from the console, planning to look for the ship’s cat, Fluff.'), nl,
     write('As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it’s cut short.'), nl,
     write('You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.'), nl,
-    retractall(lights_on), 
     nl.
 
+/* This rule decribes finding the first body scene. */
+
 first_body :-
-    % TBD
+    assert(lights_on),
+    assert(force_investigation),
+    retract(alive(dallas)),
+    write('You step into the living quarters. The lights flicker back on, blinding you for a moment.'), nl,
+    write('A scream cuts through the silence - Lambert\'s. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow.'), nl,
+    write('Only Lambert and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must\'ve restored the power.'), nl,
+    write('Reed turns to you, his voice tight. \'You\'re the one in command now, Ripley. What do we do?\''), nl,
+    write('Do you look around the room first, or investigate one of the crew members?'),
+    nl.
+
+/* These rules describe investigations.*/
 
 /****** MAIN *************************************************************/
 /* This rule is displayed after executing this file.
@@ -190,20 +248,21 @@ main :-
     % set initial values
     assert(player_at(technical_room)),
     assert(alive(player)),
+    assert(alive(fluff)),
+    assert(alive(lambert)),
+    assert(alive(dallas)),
+    assert(alive(walker)),
+    assert(alive(reed)),
+    assert(alive(becker)),
     assert(counter(0)),
-    lights_on,
+    assert(lights_on),
+    assert(shuttle_closed),
 
     % Put stuff & people in places
     assert(at(fluff, medbay)),
     assert(at(gun, storage_bay)),
     assert(at(multitool, medbay)),
 
-
-    % Make sure characters are alive
-
-    assert(at(thing, someplace)),
-    assert(alive(player)), % TBD - update characters to be alive
-    assert(counter(0)),
     write('Do you want to play a game?'), nl,
     write('You are the Warrant Officer aboard the spaceship Nostromo, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship’s dark corridors...'), nl,
     write('But before you continue your journey:'),

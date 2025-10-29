@@ -4,14 +4,28 @@
 
 /* Dynamic variables */
 :- dynamic player_at/1, at/2, holding/1, alive/1.
-:- dynamic counter/1, chosen/1, player_at/1.
+:- dynamic counter/1, chosen/1.
 :- dynamic lights_on/0.
 :- dynamic force_investigation/0.
 :- dynamic investigated/1.
 :- dynamic shuttle_closed/0.
+:- dynamic investigated/1.
 
-player_at(someplace).
-at(thing, someplace).
+/* These rules define rooms existence. */
+room(technical_room).
+room(living_quarters).
+room(medbay).
+room(storage_bay).
+room(power_room).
+room(shuttle).
+
+/* These rules define characters. */
+character(fluff).
+character(dallas).
+character(becker).
+character(lambert).
+character(reed).
+character(walker).
 
 /* These rules describe how to pick up an object. */
 take(X) :-
@@ -31,21 +45,14 @@ take(_) :-
     write('It is not here.'),
     nl.
 
-/* These rules define rooms existence. */
-room(technical_room).
-room(living_quarters).
-room(medbay).
-room(storage_bay).
-room(power_room).
-room(shuttle).
-
 /* These rules describe how to go someplace. */
 
 % check if room is shuttle and closed
 go(shuttle) :-
     shuttle_closed,
     !,
-    write('Cannot enter the shuttle. Only available in case of code red.'), nl.
+    write('Cannot enter the shuttle. Only available in case of code red.'),
+    nl.
 
 % check if the room exists
 go(There) :-
@@ -53,13 +60,21 @@ go(There) :-
     !,
     write('There is no such room as '),
     write(There), nl,
-    write('To see available rooms type \'rooms.\'').
+    write('To see available rooms type \'rooms.\''),
+    nl.
 
 % check if already in the room
 go(There) :-
     player_at(There),
     !,
     write('You are already here.'), nl.
+
+% if force_investigation is true
+go(_) :-
+    force_investigation,
+    !,
+    write('\'Where the hell are you going, Ripley?\' Reed snaps, grabbing your arm and pulling you back into the room. \'You\'re not leaving until we figure out what happened here. You\'re the warrant officer - you lead the investigation.\''), nl,
+    nl.
 
 go(There) :-
     player_at(Here),
@@ -222,6 +237,9 @@ first_body :-
     assert(lights_on),
     assert(force_investigation),
     retract(alive(dallas)),
+    assert(at(dallas, living_quarters)),
+    assert(at(lambert, living_quarters)),
+    assert(at(reed, living_quarters)),
     write('You step into the living quarters. The lights flicker back on, blinding you for a moment.'), nl,
     write('A scream cuts through the silence - Lambert\'s. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow.'), nl,
     write('Only Lambert and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must\'ve restored the power.'), nl,
@@ -230,6 +248,67 @@ first_body :-
     nl.
 
 /* These rules describe investigations.*/
+
+% does person exists
+investigate(Person) :-
+    \+ character(Person),
+    !,
+    write('There is no such character as '),
+    write(Person), nl,
+    write('To see characters type \'characters.\''), nl.
+
+% is person in the room
+investigate(Person) :-
+    player_at(Place),
+    \+ at(Person, Place),
+    !,
+    write('You can\'t investigate them - they\'re not in the room with you.'), nl,
+    nl.
+
+% fluff investigation case
+investigate(fluff) :-
+    !,
+    write('\'What can you tell me, Fluff?\''), nl,
+    write('The cat looks at you with his big green eyes curiously and only softly meows back.'), nl,
+    nl.
+
+% if person is dead
+investigate(Person) :-
+    \+ alive(Person),
+    !,
+    write('There\'s no point investigating the dead.'), nl,
+    nl.
+
+% if person was already investigated
+investigate(Person) :-
+    investigated(Person),
+    !,
+    write('\'I have nothing more to say.\' is all they say.'), nl,
+    nl.
+
+% proper investigation
+investigate(Person) :-
+    assert(investigated(Person)),
+    ( Person == lambert ->
+        retract(force_investigation),
+        write('\'You were the first here, right, Lambert?\''), nl,
+        write('\'Yeah,\' she says, voice trembling. \'I was walking down the corridor when the power went out. Then I heard the scream and...\' She glances tearfully at Dallas’s body. \'I don’t know who or what could have done this.\''), nl,
+        write('\'Did you notice anything else?\''), nl,
+        write('\'Not much,\' she says, shivering. \'Except for Fluff. The cat ran between my legs just before the scream. He was clearly rattled, yowling and howling.\''), nl,
+        write('Fluff’s instincts were always sharp. If he sensed danger before anyone else... maybe he’s seen what we haven’t.'),
+        nl
+
+    ; Person == reed ->
+        write('\'What were you doing just now, Reed?\''), nl,
+        write('\'I was running an analysis of Becker’s blood,’ he says. ‘Trying to figure out how to help him… his condition isn’t improving.\''), nl,
+        write('\'Not exactly,\' Reed admits. \'But something’s wrong. His blood is more acidic than normal, and it’s not clotting at all.\''),
+        nl
+
+    ; true
+    ),
+    nl.
+
+/* This rule described the scene where chief engineer barges in*/
 
 /****** MAIN *************************************************************/
 /* This rule is displayed after executing this file.
@@ -244,6 +323,7 @@ main :-
     retractall(alive(_)),
     retractall(counter(_)),
     retractall(chosen(_)),
+    retractall(investigated(_)),
 
     % set initial values
     assert(player_at(technical_room)),

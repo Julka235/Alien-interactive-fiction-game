@@ -14,6 +14,7 @@
 :- dynamic put_used/0.
 :- dynamic noises_heard/0.
 :- dynamic grab_used/0.
+:- dynamic countdown/1.
 
 /* These rules define rooms existence. */
 room(technical_room).
@@ -96,6 +97,16 @@ go(There) :-
     ( There == medbay ->
         write('You enter the medbay, noticing the isolation space.'), nl
     ;   write('You enter the '), write(There), nl
+    ),
+
+    % Handle sabotour
+    (There == power_room, noises_heard ->
+        confrontation
+    ;
+        noises_heard ->
+        ignorimg_noises
+    ;
+        true
     ),
 
     % Handle power room noises
@@ -371,7 +382,7 @@ walker_joins :-
     write('Wait, did he just say two?'), nl,
     nl.
 
-/* This rule describes the scenes where we hear the noises from power room */
+/* These rules describe the scenes where we hear the noises from power room */
 second_body :-
     retract(hints_counter(N)),
     N1 is N + 1,
@@ -428,6 +439,33 @@ grab(_) :-
 grab(X) :-
     assert(grab_used),
     write('Reed will go with you.').
+
+/* These rules describe saboteur scenes */
+confrontation :-
+    (grab_used -> 
+        write('You enter the power room with Reed. DA/TU/ER, the secondary computer, hums softly - a corporate file open.'), nl,
+        write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. Crew expendable.'), nl,
+        write('Cold hands clamp around your throat - it\'s Walker.'), nl,
+        write('Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed\'s body crumples to the floor, his neck bent at an unnatural angle.'), nl,
+        write('You kick Walker back into DA/TU/ER; sparks explode as his head smashes through the screen, wires spilling from the wound instead of blood'), nl,
+        write('\'You\'re... an android?\' you gasp.'), nl,
+        write('\'The organism must survive,\' he rasps, voice glitching. \'It\'s evolving... indestructable now.\''), nl,
+        write('He convulses violently, circuits flaring, and DA/TU/ER\'s lights turn red.'), nl,
+        write('You hear MU/TH/ER\'s automated voice through the speakers:'), nl,
+        write('\'Code red. Auto-destruction sequence initiated.'), nl,
+        write('Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
+        write('Somewhere in the ship, you think you hear Fluff\'s distant yowl - a reminder that not everything worth saving here is human.'), nl,
+        retractall(countdown(_)),
+        assert(countdown(3)),
+        nl
+    ;
+        write('You enter the power room. It\'s empty - nobody in sight.'), nl,
+        write('A second computer, DA/TU/ER hums softly. Its screen displays a corporate history log. You glance through it.'), nl,
+        write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. All other considerations secondary. Crew expendable.'), nl,
+        write('Before you can process the message, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black.'), nl,
+        write('DA/TU/ER: Updated report for mission 067801: Time 9036919h: Warrant Officer Ripley found dead.'), nl,
+        stop
+    ).
 
 % THE STORY MUST BE CONTINUED FROM HERE
 

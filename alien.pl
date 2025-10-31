@@ -66,6 +66,13 @@ go(There) :-
     write('To see available rooms type \'rooms.\''),
     nl.
 
+% check if MU/TH/ER waits for your choice
+go(There) :-
+    \+ put_used,
+    !,
+    write('MU/TH/ER is waiting for your decision you can\'t leave yet'),
+    nl.
+
 % check if already in the room
 go(There) :-
     player_at(There),
@@ -90,6 +97,16 @@ go(There) :-
     ;   write('You enter the '), write(There), nl
     ),
 
+    % Handle power room noises
+    (There == medbay, \+ noises_heard, lights_on ->
+        second_body
+    ;
+        \+ noises_heard, lights_on ->
+        noise_power_room
+    ;
+        true
+    ),
+
     % Handle lights
     ( There == living_quarters, \+ lights_on ->
         first_body
@@ -98,14 +115,6 @@ go(There) :-
         write('You almost trip over something you can’t see. Everything is still pitch black.'), nl
     ;
         true
-    ),
-
-    % Handle power room noises
-    (There == medbay, \+ noises_heard ->
-        second_body
-    ;
-        \+ noises_heard ->
-        noise_power_room
     ),
 
     nl.

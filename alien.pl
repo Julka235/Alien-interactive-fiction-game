@@ -12,6 +12,7 @@
 :- dynamic investigated/1.
 :- dynamic investigated_quarters/0.
 :- dynamic put_used/0.
+:- dynamic noises_heard/0.
 
 /* These rules define rooms existence. */
 room(technical_room).
@@ -98,6 +99,15 @@ go(There) :-
     ;
         true
     ),
+
+    % Handle power room noises
+    (There == medbay, \+ noises_heard ->
+        second_body
+    ;
+        \+ noises_heard ->
+        noise_power_room
+    ),
+
     nl.
 
 /* This rule tells how to look at your surroundings. */
@@ -351,6 +361,46 @@ walker_joins :-
     write('Wait, did he just say two?'), nl,
     nl.
 
+/* This rule describes the scenes where we hear the noises from power room */
+second_body :-
+    retract(hints_counter(N)),
+    N1 is N + 1,
+    assert(hints_counter(N1)),
+    write('Becker\'s body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'), nl,
+    write('A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'), nl,
+    write('A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches.'), nl,
+    write('The door swings open. Reed steps inside, pale and grim.'), nl,
+    write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,
+    write('\'How do I know you\'re not the killer?\''), nl,
+    write('\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\''), nl,
+    write('If you want to take Reed with you, type \'grab(reed).\' before going to the next room.'), nl,
+    (   N1 >= 2 ->
+        write('At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?'), nl,
+        write('Better not to split up when there might be another enemy aboard.'), nl
+    ;   true
+    ),
+    assert(noises_heard),
+    nl.
+
+noise_power_room :-
+    write('A strange noise comes from the power room, followed by a scream. Your breath catches.'), nl,
+    write('The door swings open. Reed steps inside, pale and grim.'), nl,
+    write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,
+    write('\'How do I know you\'re not the killer?\''), nl,
+    write('\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\''), nl,
+    write('If you want to take Reed with you, type \'grab(reed).\' before going to the next room.'), nl,
+    retract(hints_counter(N)),
+    N1 is N + 1,
+    assert(hints_counter(N1)),
+    (   N1 >= 2 ->
+        write('At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?'), nl,
+        write('Better not to split up when there might be another enemy aboard.'), nl
+    ;   true
+    ),
+    assert(noises_heard),
+    nl.
+	
+
 % THE STORY MUST BE CONTINUED FROM HERE
 
 /****** MAIN *************************************************************/
@@ -367,6 +417,7 @@ main :-
     retractall(hints_counter(_)),
     retractall(chosen(_)),
     retractall(investigated(_)),
+    retractall(noises_heard),
 
     % set initial values
     assert(player_at(technical_room)),

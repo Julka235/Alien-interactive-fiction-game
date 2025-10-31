@@ -132,7 +132,7 @@ describe(living_quarters, Text) :-
 
 describe(technical_room, 'The servers hum steadily. MU/TH/ER’s screen glows softly, waiting silently for your next command').
 
-describe(storage_bay, 'Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting.').
+describe(storage_bay, 'Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one.').
 
 describe(power_room, 'The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal.').
 

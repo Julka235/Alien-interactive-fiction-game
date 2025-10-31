@@ -104,7 +104,7 @@ go(There) :-
         confrontation
     ;
         noises_heard ->
-        ignorimg_noises
+        ignoring_noises
     ;
         true
     ),
@@ -466,6 +466,11 @@ confrontation :-
         write('DA/TU/ER: Updated report for mission 067801: Time 9036919h: Warrant Officer Ripley found dead.'), nl,
         stop
     ).
+
+ignoring_noises :-
+    write('Before you can do that, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
+    write('\'Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
+    nl.
 
 % THE STORY MUST BE CONTINUED FROM HERE
 

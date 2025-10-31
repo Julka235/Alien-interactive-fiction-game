@@ -13,6 +13,7 @@
 :- dynamic investigated_quarters/0.
 :- dynamic put_used/0.
 :- dynamic noises_heard/0.
+:- dynamic grab_used/0.
 
 /* These rules define rooms existence. */
 room(technical_room).
@@ -409,6 +410,24 @@ noise_power_room :-
     assert(noises_heard),
     nl.
 	
+/* This rule tells how to grab Reed. */
+valid_grab(reed).
+grab(X) :-
+    \+ valid_grab(X),
+    !,
+    write('You can only take Reed with you. There is no one else here.'), nl,
+    write('Try again.'), nl,
+    true.
+
+grab(_) :-
+    grab_used,
+    !,
+    write('Reed is already with you.'),
+    nl.
+
+grab(X) :-
+    assert(grab_used),
+    write('Reed will go with you.').
 
 % THE STORY MUST BE CONTINUED FROM HERE
 
@@ -426,7 +445,6 @@ main :-
     retractall(hints_counter(_)),
     retractall(chosen(_)),
     retractall(investigated(_)),
-    retractall(noises_heard),
 
     % set initial values
     assert(player_at(technical_room)),

@@ -72,7 +72,7 @@ go(There) :-
 go(_) :-
     \+ put_used,
     !,
-    write('MU/TH/ER is waiting for your decision you can\'t leave yet'),
+    write('MU/TH/ER is waiting for your decision. You can\'t leave yet.'),
     nl.
 
 % check if already in the room
@@ -443,7 +443,7 @@ grab(_) :-
 /* These rules describe saboteur scenes */
 confrontation :-
     (grab_used -> 
-        write('You enter the power room with Reed. DA/TU/ER, the secondary computer, hums softly - a corporate file open.'), nl,
+        write('DA/TU/ER, the secondary computer, hums softly - a corporate file open.'), nl,
         write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. Crew expendable.'), nl,
         write('Cold hands clamp around your throat - it\'s Walker.'), nl,
         write('Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed\'s body crumples to the floor, his neck bent at an unnatural angle.'), nl,
@@ -459,7 +459,7 @@ confrontation :-
         assert(countdown(3)),
         nl
     ;
-        write('You enter the power room. It\'s empty - nobody in sight.'), nl,
+        write('It\'s empty - nobody in sight.'), nl,
         write('A second computer, DA/TU/ER hums softly. Its screen displays a corporate history log. You glance through it.'), nl,
         write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. All other considerations secondary. Crew expendable.'), nl,
         write('Before you can process the message, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black.'), nl,

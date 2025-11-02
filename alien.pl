@@ -69,7 +69,7 @@ go(There) :-
     nl.
 
 % check if MU/TH/ER waits for your choice
-go(There) :-
+go(_) :-
     \+ put_used,
     !,
     write('MU/TH/ER is waiting for your decision you can\'t leave yet'),
@@ -436,7 +436,7 @@ grab(_) :-
     write('Reed is already with you.'),
     nl.
 
-grab(X) :-
+grab(_) :-
     assert(grab_used),
     write('Reed will go with you.').
 

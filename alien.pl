@@ -387,6 +387,7 @@ second_body :-
     retract(hints_counter(N)),
     N1 is N + 1,
     assert(hints_counter(N1)),
+    assert(at(reed, medbay)),
     write('Becker\'s body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'), nl,
     write('A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'), nl,
     write('A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches.'), nl,
@@ -458,6 +459,9 @@ confrontation :-
         write('\'Code red. Auto-destruction sequence initiated.'), nl,
         write('Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
         write('Somewhere in the ship, you think you hear Fluff\'s distant yowl - a reminder that not everything worth saving here is human.'), nl,
+        retract(alive(reed)),
+        retract(alive(walker)),
+        retract(shuttle_closed),
         retractall(countdown(_)),
         assert(countdown(3)),
         nl
@@ -467,6 +471,7 @@ confrontation :-
         write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. All other considerations secondary. Crew expendable.'), nl,
         write('Before you can process the message, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black.'), nl,
         write('DA/TU/ER: Updated report for mission 067801: Time 9036919h: Warrant Officer Ripley found dead.'), nl,
+        retract(alive(player)),
         stop
     ).
 
@@ -476,6 +481,7 @@ ignoring_noises :-
 ignoring_noises :-
     write('Before you can do that, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
     write('\'Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
+    retract(shuttle_closed),
     retractall(countdown(_)),
     assert(countdown(3)),
     nl.

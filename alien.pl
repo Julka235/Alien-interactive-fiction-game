@@ -442,6 +442,9 @@ grab(_) :-
 
 /* These rules describe saboteur scenes */
 confrontation :-
+    countdown(_), !.
+
+confrontation :-
     (grab_used -> 
         write('DA/TU/ER, the secondary computer, hums softly - a corporate file open.'), nl,
         write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. Crew expendable.'), nl,
@@ -468,8 +471,13 @@ confrontation :-
     ).
 
 ignoring_noises :-
+    countdown(_), !.
+
+ignoring_noises :-
     write('Before you can do that, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
     write('\'Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
+    retractall(countdown(_)),
+    assert(countdown(3)),
     nl.
 
 % THE STORY MUST BE CONTINUED FROM HERE

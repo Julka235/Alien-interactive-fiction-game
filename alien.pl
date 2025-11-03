@@ -113,7 +113,7 @@ go(There) :-
     (There == medbay, \+ noises_heard, lights_on ->
         second_body
     ;
-        \+ noises_heard, lights_on ->
+        There \= power_room, \+ noises_heard, lights_on ->
         noise_power_room
     ;
         true

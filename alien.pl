@@ -253,6 +253,7 @@ start :-
     write('Before you can respond, the main console clears. A new line appears.'), nl,
     write('MU/TH/ER: Science Officer Reed has re-entered the Nostromo carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?'), nl,
     write('Type either \'put(medbay).\' or \'put(isolation).\''), nl,
+    assert(game_started),
     nl.
 
 /* These rules handle put logic. */
@@ -429,6 +430,7 @@ second_body :-
     nl.
 
 noise_power_room :-
+    assert(at(reed, medbay)),
     write('A strange noise comes from the power room, followed by a scream. Your breath catches.'), nl,
     write('The door swings open. Reed steps inside, pale and grim.'), nl,
     write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,
@@ -448,6 +450,11 @@ noise_power_room :-
 	
 /* This rule tells how to grab Reed. */
 valid_grab(reed).
+grab(_) :-
+    \+ noises_heard,
+    !,
+    write('You don\'t need to grab anyone.'), nl.
+
 grab(X) :-
     \+ valid_grab(X),
     !,
@@ -461,7 +468,7 @@ grab(_) :-
     write('Reed is already with you.'),
     nl.
 
-grab(_) :-
+grab(reed) :-
     assert(grab_used),
     write('Reed will go with you.').
 

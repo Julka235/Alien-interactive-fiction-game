@@ -15,6 +15,7 @@
 :- dynamic grab_used/0.
 :- dynamic countdown/1.
 :- dynamic game_started/0.
+:- dynamic blocked_investigation/0.
 
 /* These rules define rooms existence. */
 room(technical_room).
@@ -418,6 +419,7 @@ walker_joins :-
 
 /* These rules describe the scenes where we hear the noises from power room */
 second_body :-
+    retractall(at(walker, _)), 
     retract(hints_counter(N)),
     N1 is N + 1,
     assert(hints_counter(N1)),
@@ -441,6 +443,7 @@ second_body :-
     nl.
 
 noise_power_room :-
+    retractall(at(walker, _)), 
     player_at(Place),
     retractall(at(reed, _)), 
     assert(at(reed, Place)),
@@ -492,6 +495,9 @@ confrontation :-
 
 confrontation :-
     (grab_used -> 
+        retractall(at(reed, _)), 
+        assert(at(reed, power_room)),
+        assert(at(walker, power_room)),
         write('DA/TU/ER, the secondary computer, hums softly - a corporate file open.'), nl,
         write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. Crew expendable.'), nl,
         write('Cold hands clamp around your throat - it\'s Walker.'), nl,
@@ -511,6 +517,7 @@ confrontation :-
         assert(countdown(3)),
         nl
     ;
+        assert(at(walker, power_room)),
         write('It\'s empty - nobody in sight.'), nl,
         write('A second computer, DA/TU/ER hums softly. Its screen displays a corporate history log. You glance through it.'), nl,
         write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. All other considerations secondary. Crew expendable.'), nl,
@@ -524,6 +531,9 @@ ignoring_noises :-
     countdown(_), !.
 
 ignoring_noises :-
+    player_at(Place),
+    retractall(at(reed, _)), 
+    assert(at(reed, Place)),
     write('Before you can do that, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
     write('\'Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
     retract(shuttle_closed),

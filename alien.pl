@@ -40,6 +40,12 @@ take(_) :-
     nl.
 
 take(X) :-
+    character(X),
+    !,
+    write('Kidnaping is illegal Officer Ripley.'),
+    nl.
+
+take(X) :-
     holding(X),
     write('You''re already holding it!'),
     !, nl.
@@ -122,13 +128,16 @@ go(There) :-
     ),
 
     % Handle power room noises
-    (There == medbay, \+ noises_heard, lights_on ->
-        second_body
-    ;
-        There \= power_room, \+ noises_heard, lights_on ->
-        noise_power_room
-    ;
-        true
+    (   \+ noises_heard,
+        lights_on
+    ->
+        (   There == medbay ->
+                second_body
+        ;   There \= power_room ->
+                noise_power_room
+        ;   true
+        )
+    ;   true
     ),
 
     % Handle lights
@@ -413,6 +422,7 @@ second_body :-
     N1 is N + 1,
     assert(hints_counter(N1)),
     retract(alive(becker)),
+    retractall(at(reed, _)), 
     assert(at(reed, medbay)),
     write('Becker\'s body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'), nl,
     write('A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'), nl,
@@ -431,7 +441,9 @@ second_body :-
     nl.
 
 noise_power_room :-
-    assert(at(reed, medbay)),
+    player_at(Place),
+    retractall(at(reed, _)), 
+    assert(at(reed, Place)),
     retract(alive(becker)),
     write('A strange noise comes from the power room, followed by a scream. Your breath catches.'), nl,
     write('The door swings open. Reed steps inside, pale and grim.'), nl,

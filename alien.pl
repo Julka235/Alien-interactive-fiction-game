@@ -43,7 +43,7 @@ take(_) :-
 take(X) :-
     character(X), X \= fluff,
     !,
-    write('Kidnaping is illegal Officer Ripley.'),
+    write('Kidnaping is illegal, Officer Ripley.'),
     nl.
 
 take(X) :-
@@ -372,7 +372,7 @@ investigate(Person) :-
 investigate(_) :-
     blocked_investigation,
     !,
-    write('There\'s no time to waste on talking.'), nl,
+    write('There\'s no time to waste on talking now.'), nl,
     nl.
 
 % proper investigation
@@ -434,6 +434,7 @@ second_body :-
     retractall(at(reed, _)), 
     assert(at(reed, medbay)),
     assert(blocked_investigation),
+    assert(investigated_quarters),
     write('Becker\'s body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'), nl,
     write('A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'), nl,
     write('A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches.'), nl,
@@ -457,6 +458,7 @@ noise_power_room :-
     assert(at(reed, Place)),
     retract(alive(becker)),
     assert(blocked_investigation),
+    assert(investigated_quarters),
     write('A strange noise comes from the power room, followed by a scream. Your breath catches.'), nl,
     write('The door swings open. Reed steps inside, pale and grim.'), nl,
     write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,
@@ -484,8 +486,7 @@ grab(_) :-
 grab(X) :-
     \+ valid_grab(X),
     !,
-    write('You can only take Reed with you. There is no one else here.'), nl,
-    write('Try again.'), nl,
+    write('You cannot grab them.'), nl,
     true.
 
 grab(_) :-
@@ -521,6 +522,8 @@ confrontation :-
         write('Somewhere in the ship, you think you hear Fluff\'s distant yowl - a reminder that not everything worth saving here is human.'), nl,
         retract(alive(reed)),
         retract(alive(walker)),
+        retract(at(lambert, living_quarters)),
+        retract(at(reed, living_quarters)),
         retract(shuttle_closed),
         retractall(countdown(_)),
         assert(countdown(3)),
@@ -542,6 +545,7 @@ ignoring_noises :-
 ignoring_noises :-
     player_at(Place),
     retractall(at(reed, _)), 
+    retract(at(lambert, living_quarters)),
     assert(at(reed, Place)),
     write('Before you can do that, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
     write('\'Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,

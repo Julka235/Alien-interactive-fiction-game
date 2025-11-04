@@ -7,7 +7,6 @@
 :- dynamic hints_counter/1, chosen/1.
 :- dynamic lights_on/0.
 :- dynamic force_investigation/0.
-:- dynamic investigated/1.
 :- dynamic shuttle_closed/0.
 :- dynamic investigated/1.
 :- dynamic investigated_quarters/0.

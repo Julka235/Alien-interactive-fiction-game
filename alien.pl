@@ -40,7 +40,7 @@ take(_) :-
     nl.
 
 take(X) :-
-    character(X),
+    character(X), X \= fluff,
     !,
     write('Kidnaping is illegal Officer Ripley.'),
     nl.

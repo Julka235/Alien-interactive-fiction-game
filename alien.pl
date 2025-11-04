@@ -368,6 +368,13 @@ investigate(Person) :-
     write('\'I have nothing more to say.\' is all they say.'), nl,
     nl.
 
+% block investigation after hearing noises
+investigate(_) :-
+    blocked_investigation,
+    !,
+    write('There\'s no time to waste on talking.'), nl,
+    nl.
+
 % proper investigation
 investigate(Person) :-
     assert(investigated(Person)),
@@ -426,6 +433,7 @@ second_body :-
     retract(alive(becker)),
     retractall(at(reed, _)), 
     assert(at(reed, medbay)),
+    assert(blocked_investigation),
     write('Becker\'s body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'), nl,
     write('A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'), nl,
     write('A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches.'), nl,
@@ -448,6 +456,7 @@ noise_power_room :-
     retractall(at(reed, _)), 
     assert(at(reed, Place)),
     retract(alive(becker)),
+    assert(blocked_investigation),
     write('A strange noise comes from the power room, followed by a scream. Your breath catches.'), nl,
     write('The door swings open. Reed steps inside, pale and grim.'), nl,
     write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,

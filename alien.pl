@@ -14,6 +14,7 @@
 :- dynamic noises_heard/0.
 :- dynamic grab_used/0.
 :- dynamic countdown/1.
+:- dynamic game_started/0.
 
 /* These rules define rooms existence. */
 room(technical_room).
@@ -32,6 +33,12 @@ character(reed).
 character(walker).
 
 /* These rules describe how to pick up an object. */
+take(_) :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
+
 take(X) :-
     holding(X),
     write('You''re already holding it!'),
@@ -50,6 +57,12 @@ take(_) :-
     nl.
 
 /* These rules describe how to go someplace. */
+
+go(_) :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
 
 % check if room is shuttle and closed
 go(shuttle) :-
@@ -132,6 +145,12 @@ go(There) :-
 
 /* This rule tells how to look at your surroundings. */
 /* IT CANNOT WORK WHEN LIGHTS TURNED OFF */
+look :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
+
 look :-
     player_at(Place),
     (
@@ -294,6 +313,12 @@ first_body :-
     nl.
 
 /* These rules describe investigations.*/
+
+investigate(_) :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
 
 % does person exists
 investigate(Person) :-

@@ -412,6 +412,7 @@ second_body :-
     retract(hints_counter(N)),
     N1 is N + 1,
     assert(hints_counter(N1)),
+    retract(alive(becker)),
     assert(at(reed, medbay)),
     write('Becker\'s body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'), nl,
     write('A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'), nl,
@@ -431,6 +432,7 @@ second_body :-
 
 noise_power_room :-
     assert(at(reed, medbay)),
+    retract(alive(becker)),
     write('A strange noise comes from the power room, followed by a scream. Your breath catches.'), nl,
     write('The door swings open. Reed steps inside, pale and grim.'), nl,
     write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,

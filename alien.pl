@@ -427,6 +427,7 @@ walker_joins :-
 /* These rules describe the scenes where we hear the noises from power room */
 second_body :-
     retractall(at(walker, _)), 
+    retractall(at(lambert, _)),
     retract(hints_counter(N)),
     N1 is N + 1,
     assert(hints_counter(N1)),
@@ -453,6 +454,7 @@ second_body :-
 
 noise_power_room :-
     retractall(at(walker, _)), 
+    retractall(at(lambert, _)),
     player_at(Place),
     retractall(at(reed, _)), 
     assert(at(reed, Place)),

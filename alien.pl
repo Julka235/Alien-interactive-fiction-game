@@ -84,6 +84,7 @@ go(shuttle) :-
     shuttle_closed,
     countdown(N),
     write('The shuttle doors are closed. They shouldn\'t be - but the saboteur you failed to catch must have locked them. You remember the capitan also had the key. You run to headquarters and grab it. The whole ordeal takes over two minutes though...'), nl,
+    retract(shuttle_closed),
     retract(countdown(N)),
     N1 is N - 1,
     assert(countdown(N1)).
@@ -144,7 +145,9 @@ go(There) :-
     % Print movement message once
     ( There == medbay ->
         write('You enter the medbay, noticing the isolation space.'), nl
-    ;   write('You enter the '), write(There), nl
+    ; There \= shuttle ->
+        write('You enter the '), write(There), nl
+    ; true
     ),
 
     % Handle saboteur

@@ -125,7 +125,7 @@ go(There) :-
 
     % check room limit during countdown
     ( countdown(N) ->
-        ( N == 1, There \= shuttle ->
+        ( N =< 1, There \= shuttle ->
             write('You run out of time.'), nl,
             write('MU/TH/ER\'s automated voice counts down: \'Auto-destruction begins in 3... 2... 1...\'.'), nl,
             write('Silence follows. Than everything ends.'), nl,
@@ -673,6 +673,7 @@ main :-
     assert(at(fluff, medbay)),
     assert(at(gun, storage_bay)),
     assert(at(multitool, medbay)),
+    assert(at(key, living_quarters)),
 
     write('Do you want to play a game?'), nl,
     write('You are the Warrant Officer aboard the spaceship Nostromo, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship’s dark corridors...'), nl,

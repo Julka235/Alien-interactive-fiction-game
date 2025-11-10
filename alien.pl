@@ -87,7 +87,9 @@ go(shuttle) :-
     retract(shuttle_closed),
     retract(countdown(N)),
     N1 is N - 1,
-    assert(countdown(N1)).
+    assert(countdown(N1)),
+    retract(shuttle_closed),
+    go(shuttle).
 
 % check if the room exists
 go(There) :-
@@ -124,18 +126,21 @@ go(There) :-
     assert(player_at(There)),
 
     % check room limit during countdown
-    ( countdown(N) ->
-        ( N =< 1, There \= shuttle ->
+    ( countdown(N) ->  (
+        N >= 1, There == shuttle ->
+            enter_shuttle
+        ;
+        N =< 1 ->
             write('You run out of time.'), nl,
             write('MU/TH/ER\'s automated voice counts down: \'Auto-destruction begins in 3... 2... 1...\'.'), nl,
-            write('Silence follows. Than everything ends.'), nl,
+            write('Silence follows. Then everything ends.'), nl,
             !,
             stop
         ;
             retract(countdown(N)),
             N1 is N - 1,
             assert(countdown(N1)),
-            write('Player can go max to 3 rooms, with shuttle space being the last. Current counter:'),
+            write('Player can go max to 3 rooms, with shuttle space being the last. Current counter: '),
             write(N1), nl, nl
         )
     ;
@@ -184,12 +189,6 @@ go(There) :-
         true
     ),
 
-    % Handle shuttle
-    ( There == shuttle ->
-        enter_shuttle
-    ;
-        true
-    ),
     !,
     nl.
 
@@ -673,7 +672,6 @@ main :-
     assert(at(fluff, medbay)),
     assert(at(gun, storage_bay)),
     assert(at(multitool, medbay)),
-    assert(at(key, living_quarters)),
 
     write('Do you want to play a game?'), nl,
     write('You are the Warrant Officer aboard the spaceship Nostromo, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship’s dark corridors...'), nl,

@@ -593,14 +593,14 @@ ignoring_noises :-
 
 ignoring_noises :-
     ( grab_used ->
-        write('\'Where are you going?\' Reed asks confused from behind your back.'), nl,
-        write('You ignore him. All you can think about is to run FROM the noise - not TO it.'), nl,
-        write('\'As you wish\' Reed scolds as he starts walking back towars power room. \'I\'ll face it alone\'.'), nl, nl,
-    ;
-        write('You look around - Reed didn\'t follow you after you decided to ignore him. He probably went face the noise alone.'), nl, nl
+            write('Where are you going? Reed asks confused from behind your back.'), nl,
+            write('You ignore him. All you can think about is to run FROM the noise - not TO it.'), nl,
+            write('As you wish Reed scolds as he starts walking back towars power room. I will face it alone.'), nl, nl
+        ;
+            write('You look around - Reed did not follow you after you decided to ignore him. He probably went face the noise alone.'), nl, nl
     ),
     write('Then, before you can do or think anything else, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
-    write('\'Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
+    write('Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.'), nl,
     retractall(alive(reed)),
     retractall(countdown(_)),
     assert(countdown(3)).

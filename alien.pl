@@ -594,9 +594,9 @@ ignoring_noises :-
 
 ignoring_noises :-
     ( grab_used ->
-            write('\'Where are you going?\; Reed asks, confused, from behind your back.'), nl,
+            write('\'Where are you going?\' Reed asks, confused, from behind your back.'), nl,
             write('You ignore him. All you can think about is running from the noise — not toward it.'), nl,
-            write('As you wish,\' Reed scolds as he starts walking back toward the power room. “I’ll face it alone.”'), nl, nl
+            write('As you wish,\' Reed scolds as he starts walking back toward the power room. “I’ll face it alone.\''), nl, nl
         ;
             write('Reed decided not to follow you after you ignored him. He probably went to face the noise alone.'), nl, nl
     ),

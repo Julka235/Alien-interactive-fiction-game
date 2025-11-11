@@ -488,8 +488,9 @@ second_body :-
     write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,
     write('\'How do I know you\'re not the killer?\''), nl,
     write('\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\''), nl,
-    write('If you want to take Reed with you, type \'grab(reed).\' before going to the next room.'), nl,
+    write('If you want to take Reed with you, type \'grab(reed).\' before going to the next room.'),
     (   N1 >= 2 ->
+        nl,
         write('At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?'), nl,
         write('Better not to split up when there might be another enemy aboard.')
     ;   true
@@ -596,7 +597,7 @@ ignoring_noises :-
     ( grab_used ->
             write('\'Where are you going?\' Reed asks, confused, from behind your back.'), nl,
             write('You ignore him. All you can think about is running from the noise — not toward it.'), nl,
-            write('As you wish,\' Reed scolds as he starts walking back toward the power room. “I’ll face it alone.\''), nl, nl
+            write('As you wish,\' Reed scolds as he starts walking back toward the power room. \'I’ll face it alone.\''), nl, nl
         ;
             write('Reed decided not to follow you after you ignored him. He probably went to face the noise alone.'), nl, nl
     ),

@@ -38,4 +38,10 @@ For Ubuntu from version 21.10 (amd64) for smalltalk download those packets and i
 2. https://launchpad.net/ubuntu/impish/amd64/gnu-smalltalk-common/3.2.5-1.3ubuntu1
 3. https://launchpad.net/ubuntu/impish/amd64/gnu-smalltalk/3.2.5-1.3ubuntu1
 
+## Start the game
+
+To start the game on Ubuntu with proper setup, you need to go to appropriate directory with the files and run:
+```
+swipl alien.pl
+```
 Enjoy the game :)

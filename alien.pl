@@ -43,7 +43,7 @@ take(_) :-
 take(X) :-
     character(X), X \= fluff,
     !,
-    write('Kidnaping is illegal, Officer Ripley.'),
+    write('Kidnaping crew members is illegal, Officer.'),
     nl.
 
 take(X) :-
@@ -140,8 +140,7 @@ go(There) :-
             retract(countdown(N)),
             N1 is N - 1,
             assert(countdown(N1)),
-            write('Player can go max to 3 rooms, with shuttle space being the last. Current counter: '),
-            write(N1), nl, nl
+            write('You can visit '), write(N1), write(' more rooms - with the shuttle bay as the last one - before the autodestruction sequence begins.'), nl, nl
         )
     ;
         true
@@ -492,7 +491,7 @@ second_body :-
     write('If you want to take Reed with you, type \'grab(reed).\' before going to the next room.'), nl,
     (   N1 >= 2 ->
         write('At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?'), nl,
-        write('Better not to split up when there might be another enemy aboard.'), nl
+        write('Better not to split up when there might be another enemy aboard.')
     ;   true
     ),
     assert(noises_heard),
@@ -574,7 +573,7 @@ confrontation :-
     write('\'Code red. Auto-destruction sequence initiated.'), nl,
     write('Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
     write('Somewhere in the ship, you think you hear Fluff\'s distant yowl - a reminder that not everything worth saving here is human.'), nl,
-    write('You have only three minutes to get out of this ship... It means that you can visit up to 3 rooms including the shuttle. Think about existing rooms and what they contain. You must quickly grab what you need and go to the shuttle!'), nl,
+    write('You have only three minutes to get off this ship... That means you can visit up to three rooms, including the shuttle. Grab what you need quickly and make your way to the shuttle!'), nl,
     nl.
 
 confrontation :-
@@ -595,11 +594,11 @@ ignoring_noises :-
 
 ignoring_noises :-
     ( grab_used ->
-            write('Where are you going? Reed asks confused from behind your back.'), nl,
-            write('You ignore him. All you can think about is to run FROM the noise - not TO it.'), nl,
-            write('As you wish Reed scolds as he starts walking back towars power room. I will face it alone.'), nl, nl
+            write('\'Where are you going?\; Reed asks, confused, from behind your back.'), nl,
+            write('You ignore him. All you can think about is running from the noise — not toward it.'), nl,
+            write('As you wish,\' Reed scolds as he starts walking back toward the power room. “I’ll face it alone.”'), nl, nl
         ;
-            write('You look around - Reed did not follow you after you decided to ignore him. He probably went face the noise alone.'), nl, nl
+            write('Reed decided not to follow you after you ignored him. He probably went to face the noise alone.'), nl, nl
     ),
     write('Then, before you can do or think anything else, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
     write('Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.'), nl,

@@ -7,11 +7,15 @@
 :- dynamic hints_counter/1, chosen/1.
 :- dynamic lights_on/0.
 :- dynamic force_investigation/0.
-:- dynamic investigated/1.
 :- dynamic shuttle_closed/0.
 :- dynamic investigated/1.
 :- dynamic investigated_quarters/0.
 :- dynamic put_used/0.
+:- dynamic noises_heard/0.
+:- dynamic grab_used/0.
+:- dynamic countdown/1.
+:- dynamic game_started/0.
+:- dynamic blocked_investigation/0.
 
 /* These rules define rooms existence. */
 room(technical_room).
@@ -30,6 +34,18 @@ character(reed).
 character(walker).
 
 /* These rules describe how to pick up an object. */
+take(_) :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
+
+take(X) :-
+    character(X), X \= fluff,
+    !,
+    write('Kidnaping crew members is illegal, Officer.'),
+    nl.
+
 take(X) :-
     holding(X),
     write('You''re already holding it!'),
@@ -49,20 +65,46 @@ take(_) :-
 
 /* These rules describe how to go someplace. */
 
-% check if room is shuttle and closed
+go(_) :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
+
+/* Shuttle is closed BEFORE countdown */
 go(shuttle) :-
     shuttle_closed,
+    \+ countdown(_),
     !,
     write('Cannot enter the shuttle. Only available in case of code red.'),
     nl.
 
+/* Countdown started and shuttle closed -> locked. Minus 2 minutes. */
+go(shuttle) :-
+    shuttle_closed,
+    countdown(N),
+    write('The shuttle doors are closed. They shouldn\'t be - but the saboteur you failed to catch must have locked them. You remember the capitan also had the key. You run to headquarters and grab it. The whole ordeal takes over two minutes though...'), nl,
+    retract(shuttle_closed),
+    retract(countdown(N)),
+    N1 is N - 1,
+    assert(countdown(N1)),
+    retract(shuttle_closed),
+    go(shuttle).
+
 % check if the room exists
 go(There) :-
-    \+ room(There),                 
+    \+ room(There),
     !,
     write('There is no such room as '),
     write(There), nl,
     write('To see available rooms type \'rooms.\''),
+    nl.
+
+% check if MU/TH/ER waits for your choice
+go(_) :-
+    \+ put_used,
+    !,
+    write('MU/TH/ER is waiting for your decision. You can\'t leave yet.'),
     nl.
 
 % check if already in the room
@@ -83,10 +125,57 @@ go(There) :-
     retract(player_at(Here)),          % move player
     assert(player_at(There)),
 
+    % check room limit during countdown
+    ( countdown(N) ->  (
+        N >= 1, There == shuttle ->
+            enter_shuttle
+        ;
+        N =< 1 ->
+            write('You run out of time.'), nl,
+            write('MU/TH/ER\'s automated voice counts down: \'Auto-destruction begins in 3... 2... 1...\'.'), nl,
+            write('Silence follows. Then everything ends.'), nl,
+            !,
+            stop
+        ;
+            retract(countdown(N)),
+            N1 is N - 1,
+            assert(countdown(N1)),
+            write('You can visit '), write(N1), write(' more rooms - with the shuttle bay as the last one - before the autodestruction sequence begins.'), nl, nl
+        )
+    ;
+        true
+    ),
+
     % Print movement message once
     ( There == medbay ->
         write('You enter the medbay, noticing the isolation space.'), nl
-    ;   write('You enter the '), write(There), nl
+    ; There \= shuttle ->
+        write('You enter the '), write(There), nl
+    ; true
+    ),
+
+    % Handle saboteur
+    (
+        (There == power_room, noises_heard) ->
+            confrontation
+    ;
+        noises_heard ->
+            ignoring_noises
+    ;
+        true
+    ),
+
+    % Handle power room noises
+    (   \+ noises_heard,
+        lights_on
+    ->
+        (   There == medbay ->
+                second_body
+        ;   There \= power_room ->
+                noise_power_room
+        ;   true
+        )
+    ;   true
     ),
 
     % Handle lights
@@ -98,10 +187,18 @@ go(There) :-
     ;
         true
     ),
+
+    !,
     nl.
 
 /* This rule tells how to look at your surroundings. */
 /* IT CANNOT WORK WHEN LIGHTS TURNED OFF */
+look :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
+
 look :-
     player_at(Place),
     (
@@ -144,7 +241,7 @@ rooms :-
     write('living_quarters      -- where the crew sleeps and eats.'), nl,
     write('medbay               -- medical bay with an internal isolation space.'), nl,
     write('storage_bay          -- storage for weapons and canned supplies.'), nl,
-    write('technical_room       -- houes the main computer, MU/TH/ER.'), nl,
+    write('technical_room       -- houses the main computer, MU/TH/ER.'), nl,
     write('power_room           -- controls the ship\'s entire power system.'), nl,
     write('shuttle              -- escape vessel for emergency departure.'), nl,
     nl.
@@ -184,6 +281,13 @@ stop :-
     halt,
     write(' Please enter the "halt." command to close console.'), nl,
     nl.
+/* This rule displays 'WIN' message for the player. */
+win :-
+    nl,
+    write('Congrats! You and Fluff have survived the alien attack Hope to see you on the next mission, Officer.'), nl,
+    halt,
+    write(' Please enter the "halt." command to close console.'), nl,
+    nl.
 /* Under UNIX, the "halt." command quits Prolog but does not
    remove the output window. On a PC, however, the window
    disappears before the final output can be seen. Hence this
@@ -194,7 +298,7 @@ stop :-
 
 /* This rule starts the game. */
 start :-
-    write('MU/TH/ER, main spaceship\s computer hums softly when it prints the response on the screen.'), nl,
+    write('MU/TH/ER, main spaceship\'s computer hums softly when it prints the response on the screen.'), nl,
     write('MU/TH/ER: Hello, Warrant Officer Ripley. Here is the report you requested.'), nl,
     write('Report of Mission 067801'), nl,
     write('Time 9036727h: Corporate command authorizes the spaceship Nostromo to investigate a possible life form on planet 26-Draconis.'), nl,
@@ -204,6 +308,7 @@ start :-
     write('Before you can respond, the main console clears. A new line appears.'), nl,
     write('MU/TH/ER: Science Officer Reed has re-entered the Nostromo carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?'), nl,
     write('Type either \'put(medbay).\' or \'put(isolation).\''), nl,
+    assert(game_started),
     nl.
 
 /* These rules handle put logic. */
@@ -233,9 +338,9 @@ put(X) :-
 handle_choice(isolation) :-
     retract(hints_counter(N)),
     N1 is N + 1,
-    assert(hints_counter(N1)). 
+    assert(hints_counter(N1)).
 
-handle_choice(_) :-
+handle_choice(medbay) :-
     true.
 
 /* This rule describes power off scene. */
@@ -265,13 +370,19 @@ first_body :-
 
 /* These rules describe investigations.*/
 
+investigate(_) :-
+    \+ game_started,
+    !,
+    write('You need to start the game first.'),
+    nl.
+
 % does person exists
 investigate(Person) :-
     \+ character(Person),
     !,
     write('There is no such character as '),
     write(Person), nl,
-    write('To see characters type \'characters.\''), nl.
+    write('To see characters type \'crew.\''), nl.
 
 % is person in the room
 investigate(Person) :-
@@ -302,6 +413,13 @@ investigate(Person) :-
     write('\'I have nothing more to say.\' is all they say.'), nl,
     nl.
 
+% block investigation after hearing noises
+investigate(_) :-
+    blocked_investigation,
+    !,
+    write('There\'s no time to waste on talking now.'), nl,
+    nl.
+
 % proper investigation
 investigate(Person) :-
     assert(investigated(Person)),
@@ -320,8 +438,8 @@ investigate(Person) :-
         write('\'Did you find anything?\''), nl,
         write('\'Not exactly,\' Reed admits. \'But something’s wrong. His blood is more acidic than normal, and it’s not clotting at all.\''), nl,
         nl
-    
-    ; Person = walker ->
+
+    ; Person == walker ->
         write('\'What do you mean by two people, Walker?\''), nl,
         ( chosen(medbay) ->
             write('\'I was fixing the power after it went out,\' he says. \'Then I wanted to go straight to our quarters, but the medbay door was open. There was blood everywhere - Becker\'s blood, I think. I didn\'t want to investigate without you.\''),
@@ -351,7 +469,176 @@ walker_joins :-
     write('Wait, did he just say two?'), nl,
     nl.
 
-% THE STORY MUST BE CONTINUED FROM HERE
+/* These rules describe the scenes where we hear the noises from power room */
+second_body :-
+    retractall(at(walker, _)),
+    retractall(at(lambert, _)),
+    retract(hints_counter(N)),
+    N1 is N + 1,
+    assert(hints_counter(N1)),
+    retract(alive(becker)),
+    retractall(at(reed, _)),
+    assert(at(reed, medbay)),
+    assert(blocked_investigation),
+    assert(investigated_quarters),
+    write('Becker\'s body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'), nl,
+    write('A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'), nl,
+    write('A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches.'), nl,
+    write('The door swings open. Reed steps inside, pale and grim.'), nl,
+    write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,
+    write('\'How do I know you\'re not the killer?\''), nl,
+    write('\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\''), nl,
+    write('If you want to take Reed with you, type \'grab(reed).\' before going to the next room.'),
+    (   N1 >= 2 ->
+        nl,
+        write('At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?'), nl,
+        write('Better not to split up when there might be another enemy aboard.')
+    ;   true
+    ),
+    assert(noises_heard),
+    nl.
+
+noise_power_room :-
+    retractall(at(walker, _)),
+    retractall(at(lambert, _)),
+    player_at(Place),
+    retractall(at(reed, _)),
+    assert(at(reed, Place)),
+    retract(alive(becker)),
+    assert(blocked_investigation),
+    assert(investigated_quarters),
+    write('A strange noise comes from the power room, followed by a scream. Your breath catches.'), nl,
+    write('The door swings open. Reed steps inside, pale and grim.'), nl,
+    write('\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\''), nl,
+    write('\'How do I know you\'re not the killer?\''), nl,
+    write('\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\''), nl,
+    write('If you want to take Reed with you, type \'grab(reed).\' before going to the next room.'), nl,
+    retract(hints_counter(N)),
+    N1 is N + 1,
+    assert(hints_counter(N1)),
+    (   N1 >= 2 ->
+        write('At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?'), nl,
+        write('Better not to split up when there might be another enemy aboard.'), nl
+    ;   true
+    ),
+    assert(noises_heard),
+    nl.
+
+/* This rule tells how to grab Reed. */
+valid_grab(reed).
+grab(_) :-
+    \+ noises_heard,
+    !,
+    write('You don\'t need to grab anyone.'), nl.
+
+grab(X) :-
+    \+ valid_grab(X),
+    !,
+    write('You cannot grab them.'), nl,
+    true.
+
+grab(_) :-
+    grab_used,
+    !,
+    write('Reed is already with you.'),
+    nl.
+
+grab(reed) :-
+    assert(grab_used),
+    write('Reed will go with you.').
+
+/* These rules describe saboteur scenes */
+confrontation :-
+    countdown(_), !.
+
+confrontation :-
+    grab_used,
+    !,
+    retractall(at(reed, _)),
+    assert(at(reed, power_room)),
+    assert(at(walker, power_room)),
+    retract(shuttle_closed),
+    retractall(countdown(_)),
+    assert(countdown(3)),
+    retract(alive(reed)),
+    retract(alive(walker)),
+    write('DA/TU/ER, the secondary computer, hums softly - a corporate file open.'), nl,
+    write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. Crew expendable.'), nl,
+    write('Cold hands clamp around your throat - it\'s Walker.'), nl,
+    write('Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed\'s body crumples to the floor, his neck bent at an unnatural angle.'), nl,
+    write('You kick Walker back into DA/TU/ER; sparks explode as his head smashes through the screen, wires spilling from the wound instead of blood'), nl,
+    write('\'You\'re... an android?\' you gasp.'), nl,
+    write('\'The organism must survive,\' he rasps, voice glitching. \'It\'s evolving... indestructable now.\''), nl,
+    write('He convulses violently, circuits flaring, and DA/TU/ER\'s lights turn red.'), nl,
+    write('You hear MU/TH/ER\'s automated voice through the speakers:'), nl,
+    write('\'Code red. Auto-destruction sequence initiated.'), nl,
+    write('Completion in three minutes. All crew members proceed to the shuttle immediently.\''), nl,
+    write('Somewhere in the ship, you think you hear Fluff\'s distant yowl - a reminder that not everything worth saving here is human.'), nl,
+    write('You have only three minutes to get off this ship... That means you can visit up to three rooms, including the shuttle. Grab what you need quickly and make your way to the shuttle!'), nl,
+    nl.
+
+confrontation :-
+    \+ grab_used,
+    !,
+    assert(at(walker, power_room)),
+    write('It\'s empty - nobody in sight.'), nl,
+    write('A second computer, DA/TU/ER hums softly. Its screen displays a corporate history log. You glance through it.'), nl,
+    write('DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. All other considerations secondary. Crew expendable.'), nl,
+    write('Before you can process the message, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black.'), nl,
+    write('DA/TU/ER: Updated report for mission 067801: Time 9036919h: Warrant Officer Ripley found dead.'), nl,
+    retract(alive(player)),
+    stop.
+
+
+ignoring_noises :-
+    countdown(_), !.
+
+ignoring_noises :-
+    ( grab_used ->
+            write('\'Where are you going?\' Reed asks, confused, from behind your back.'), nl,
+            write('You ignore him. All you can think about is running from the noise — not toward it.'), nl,
+            write('As you wish,\' Reed scolds as he starts walking back toward the power room. \'I’ll face it alone.\''), nl, nl
+        ;
+            write('Reed decided not to follow you after you ignored him. He probably went to face the noise alone.'), nl, nl
+    ),
+    write('Then, before you can do or think anything else, the spaceship alarm goes off. You hear MU/TH/ER automated voice through the speakers:'), nl,
+    write('Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.'), nl,
+    retractall(alive(reed)),
+    retractall(countdown(_)),
+    assert(countdown(3)).
+
+
+/* These rules describe shuttle scenes */
+enter_shuttle :-
+    holding(fluff),
+    holding(gun),
+    !,
+    write('You reach the shuttle just in time and take off.'), nl,
+    write('You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule.'), nl,
+    write('Fluff hisses at the food cupboard. Your heart race - you realize the alien has made it abroad.'), nl,
+    write('Quickly, you grab a spacesuit, put it on, and hide Fluff inside with you. You secure yourself to the navigator\'s seat, keep your gun ready, and open the airlock.'), nl,
+    write('When the alien lunges, you fire, blasting it into space.'), nl,
+    write('Finally, you disarm yourself and settle into stasis, Fluff safe by your side.'), nl,
+    win.
+
+enter_shuttle :-
+    holding(fluff),
+    \+ holding(gun),
+    !,
+    write('You reach the shuttle just in time and take off.'), nl,
+    write('You update the mission report, then prepare for stasis. As you settle into the capsule, exhaustion takes over.'), nl,
+    write('Fluff suddenly hisses at the food cupboard. Your stomach drops. The alien is here - with you. Cold sweat runs down your face as you realize you have nothing to defend yourself.'), nl,
+    write('The cupboard bursts open. The creature lunges, sinking its jaws into your neck before you can even scream.'), nl,
+    stop.
+
+enter_shuttle :-
+    \+ holding(fluff),
+    !,
+    write('You reach the shuttle just in time and take off.'), nl,
+    write('You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule and close your eyes.'), nl,
+    write('You never see it coming - razor-sharp claws tear through your stomach. The alien made it aboard, hidden where you didn\'t notice. Before you can even scream, your throat is ripped open.'), nl,
+    stop.
+
 
 /****** MAIN *************************************************************/
 /* This rule is displayed after executing this file.

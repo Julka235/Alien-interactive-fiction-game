@@ -34,4 +34,8 @@ $ sudo apt-get install -y haskell-platform
 $ sudo apt-get install -y gnu-smalltalk
 ```
 
+## Start the game
+- **Prolog:** Open the path to `alien.pl` file in console and run `swipl alien.pl`.
+- **Haskell:** Open the path to `alien.hs` file in console and run `ghci alien.hs`.
+
 Enjoy the game :)

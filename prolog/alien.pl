@@ -214,20 +214,20 @@ look :-
    circumstances, a room may have more than one description. */
 describe(medbay, Text) :-
     ( holding(fluff) ->
-        Text = 'Becker’s body lies torn on the floor, blood pooling in jagged, dark patterns. The black substance coats the tiles, thicker than in Dallas’s murder. Fluff mews softly in your arms, nudging you as if urging you to leave this place.'
+        Text = 'Becker\'s body lies torn on the floor, blood pooling in jagged, dark patterns. The black substance coats the tiles, thicker than in Dallas\'s murder. Fluff mews softly in your arms, nudging you as if urging you to leave this place.'
     ;
-        Text = 'Becker’s body is torn apart on the floor, blood pooling in dark, jagged patterns. The black substance spreads across the tiles, darker and thicker than in Dallas’s murder. A faint meowing echoes from a cupboard.'
+        Text = 'Becker\'s body is torn apart on the floor, blood pooling in dark, jagged patterns. The black substance spreads across the tiles, darker and thicker than in Dallas\'s murder. A faint meowing echoes from a cupboard.'
     ).
 
 describe(living_quarters, Text) :-
     ( \+ investigated_quarters ->
         assert(investigated_quarters),
-        Text = 'The blood is still spreading across the floor. A strange black substance mixes with it in the wounds. They don’t look human-made - jagged and mangled, as if something with a jaw full of sharp teeth tore them.'
+        Text = 'The blood is still spreading across the floor. A strange black substance mixes with it in the wounds. They don\'t look human-made - jagged and mangled, as if something with a jaw full of sharp teeth tore them.'
     ;
         Text = 'The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.'
     ).
 
-describe(technical_room, 'The servers hum steadily. MU/TH/ER’s screen glows softly, waiting silently for your next command').
+describe(technical_room, 'The servers hum steadily. MU/TH/ER\'s screen glows softly, waiting silently for your next command.').
 
 describe(storage_bay, 'Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one.').
 
@@ -426,17 +426,17 @@ investigate(Person) :-
     ( Person == lambert ->
         retract(force_investigation),
         write('\'You were the first here, right, Lambert?\''), nl,
-        write('\'Yeah,\' she says, voice trembling. \'I was walking down the corridor when the power went out. Then I heard the scream and...\' She glances tearfully at Dallas’ body. \'I don’t know who or what could have done this.\''), nl,
+        write('\'Yeah,\' she says, voice trembling. \'I was walking down the corridor when the power went out. Then I heard the scream and...\' She glances tearfully at Dallas’ body. \'I don\'t know who or what could have done this.\''), nl,
         write('\'Did you notice anything else?\''), nl,
         write('\'Not much,\' she says, shivering. \'Except for Fluff. The cat ran between my legs just before the scream. He was clearly rattled, yowling and howling.\''), nl,
-        write('\'Fluff’s instincts were always sharp,\' you think to yourself. \'If he sensed danger before anyone else... maybe he’s seen what we haven’t.\''), nl,
+        write('\'Fluff\'s instincts were always sharp,\' you think to yourself. \'If he sensed danger before anyone else... maybe he’s seen what we haven\'t.\''), nl,
         walker_joins
 
     ; Person == reed ->
         write('\'What were you doing just now, Reed?\''), nl,
-        write('\'I was running an analysis of Becker’s blood,\' he says. \'Trying to figure out how to help him... his condition isn’t improving.\''), nl,
+        write('\'I was running an analysis of Becker\'s blood,\' he says. \'Trying to figure out how to help him... his condition isn\'t improving.\''), nl,
         write('\'Did you find anything?\''), nl,
-        write('\'Not exactly,\' Reed admits. \'But something’s wrong. His blood is more acidic than normal, and it’s not clotting at all.\''), nl,
+        write('\'Not exactly,\' Reed admits. \'But something’s wrong. His blood is more acidic than normal, and it\'s not clotting at all.\''), nl,
         nl
 
     ; Person == walker ->
@@ -450,7 +450,7 @@ investigate(Person) :-
             assert(hints_counter(N1)),
             write('\'I was fixing the power after it went out,\' he says. \'Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere. So I went to check the isolation, and...\''), nl,
             write('\'Did Becker leave quarantine?\''), nl,
-            write('\'Not exactly,\' Walker replies. \'He’s still in isolation - but he\'s dead, Ripley. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn\'t a malfunction. Someone on the crew must have unlocked the door.\''), nl
+            write('\'Not exactly,\' Walker replies. \'He\'s still in isolation - but he\'s dead, Ripley. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn\'t a malfunction. Someone on the crew must have unlocked the door.\''), nl
         ; true
         ),
         nl
@@ -465,7 +465,7 @@ walker_joins :-
     write('Before you can decide what to do next,  Walker - chief engineer - bursts in.'), nl,
     write('\'I fixed the po-\' he stops, startled by Dallas\'s dead body. \'What the hell happened here?\''), nl,
     write('\'The captain\'s dead,\' Reed says. \'Where have you been?\''), nl,
-    write('\'When the lights went out, I went to the power room to restore them,\' Walker explains. \'I didn’t expect two people to die while I was gone.\''), nl,
+    write('\'When the lights went out, I went to the power room to restore them,\' Walker explains. \'I didn\'t expect two people to die while I was gone.\''), nl,
     write('Wait, did he just say two?'), nl,
     nl.
 

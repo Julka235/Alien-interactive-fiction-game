@@ -674,7 +674,7 @@ main :-
     assert(at(multitool, medbay)),
 
     write('Do you want to play a game?'), nl,
-    write('You are the Warrant Officer aboard the spaceship Nostromo, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship’s dark corridors...'), nl,
+    write('You are the Warrant Officer aboard the spaceship Nostromo, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship\'s dark corridors...'), nl,
     write('But before you continue your journey:'),
     instructions,
     nl.

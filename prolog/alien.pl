@@ -48,7 +48,7 @@ take(X) :-
 
 take(X) :-
     holding(X),
-    write('You''re already holding it!'),
+    write('You\'re already holding it!'),
     !, nl.
 
 take(X) :-
@@ -183,7 +183,7 @@ go(There) :-
         first_body
     ;
         \+ lights_on ->
-        write('You almost trip over something you can’t see. Everything is still pitch black.'), nl
+        write('You almost trip over something you can\'t see. Everything is still pitch black.'), nl
     ;
         true
     ),
@@ -281,10 +281,11 @@ stop :-
     halt,
     write(' Please enter the "halt." command to close console.'), nl,
     nl.
+
 /* This rule displays 'WIN' message for the player. */
 win :-
     nl,
-    write('Congrats! You and Fluff have survived the alien attack Hope to see you on the next mission, Officer.'), nl,
+    write('Congrats! You and Fluff have survived the alien attack. Hope to see you on the next mission, Officer.'), nl,
     halt,
     write(' Please enter the "halt." command to close console.'), nl,
     nl.
@@ -347,8 +348,8 @@ handle_choice(medbay) :-
 power_off_scene :-
     retractall(lights_on),
     write('MU/TH/ER: ... Command sent.'), nl,
-    write('Per Corporate protocol, every minor decision must be logged, so you update the mission report. You stretch and rise from the console, planning to look for the ship’s cat, Fluff.'), nl,
-    write('As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it’s cut short.'), nl,
+    write('Per Corporate protocol, every minor decision must be logged, so you update the mission report. You stretch and rise from the console, planning to look for the ship\'s cat, Fluff.'), nl,
+    write('As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it\'s cut short.'), nl,
     write('You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.'), nl,
     nl.
 

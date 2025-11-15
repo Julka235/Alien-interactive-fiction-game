@@ -30,12 +30,20 @@ To set-up the environment on Ubuntu, you just need to install `swi-prolog`, `has
 ```
 $ sudo apt-get update
 $ sudo apt-get install -y swi-prolog
-$ sudo apt-get install -y haskell-platform
-$ sudo apt-get install -y gnu-smalltalk
+$ sudo apt-get install -y ghc
 ```
+
+For Ubuntu from version 21.10 (amd64) for smalltalk download those packets and install them in console in that order:
+1. https://launchpad.net/ubuntu/impish/amd64/libgst7/3.2.5-1.3ubuntu1
+2. https://launchpad.net/ubuntu/impish/amd64/gnu-smalltalk-common/3.2.5-1.3ubuntu1
+3. https://launchpad.net/ubuntu/impish/amd64/gnu-smalltalk/3.2.5-1.3ubuntu1
 
 ## Start the game
 - **Prolog:** Open the path to `alien.pl` file in console and run `swipl alien.pl`.
-- **Haskell:** Open the path to `alien.hs` file in console and run `ghci alien.hs`.
+- **Haskell:** Open the path to `alien.hs` file in console and run:
+```
+ghc alien.hs -o alien
+./alien
+```
 
 Enjoy the game :)

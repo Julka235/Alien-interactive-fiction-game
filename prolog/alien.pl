@@ -48,7 +48,7 @@ take(X) :-
 
 take(X) :-
     holding(X),
-    write('You\'re already holding it!'),
+    write('You''re already holding it!'),
     !, nl.
 
 take(X) :-
@@ -227,7 +227,7 @@ describe(living_quarters, Text) :-
         Text = 'The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.'
     ).
 
-describe(technical_room, 'The servers hum steadily. MU/TH/ER\'s screen glows softly, waiting silently for your next command.').
+describe(technical_room, 'The servers hum steadily. MU/TH/ER\'s screen glows softly, waiting silently for your next command').
 
 describe(storage_bay, 'Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one.').
 
@@ -281,11 +281,10 @@ stop :-
     halt,
     write(' Please enter the "halt." command to close console.'), nl,
     nl.
-
 /* This rule displays 'WIN' message for the player. */
 win :-
     nl,
-    write('Congrats! You and Fluff have survived the alien attack. Hope to see you on the next mission, Officer.'), nl,
+    write('Congrats! You and Fluff have survived the alien attack Hope to see you on the next mission, Officer.'), nl,
     halt,
     write(' Please enter the "halt." command to close console.'), nl,
     nl.
@@ -427,17 +426,17 @@ investigate(Person) :-
     ( Person == lambert ->
         retract(force_investigation),
         write('\'You were the first here, right, Lambert?\''), nl,
-        write('\'Yeah,\' she says, voice trembling. \'I was walking down the corridor when the power went out. Then I heard the scream and...\' She glances tearfully at Dallas’ body. \'I don\'t know who or what could have done this.\''), nl,
+        write('\'Yeah,\' she says, voice trembling. \'I was walking down the corridor when the power went out. Then I heard the scream and...\' She glances tearfully at Dallas\' body. \'I don\'t know who or what could have done this.\''), nl,
         write('\'Did you notice anything else?\''), nl,
         write('\'Not much,\' she says, shivering. \'Except for Fluff. The cat ran between my legs just before the scream. He was clearly rattled, yowling and howling.\''), nl,
-        write('\'Fluff\'s instincts were always sharp,\' you think to yourself. \'If he sensed danger before anyone else... maybe he’s seen what we haven\'t.\''), nl,
+        write('\'Fluff\'s instincts were always sharp,\' you think to yourself. \'If he sensed danger before anyone else... maybe he\'s seen what we haven\'t.\''), nl,
         walker_joins
 
     ; Person == reed ->
         write('\'What were you doing just now, Reed?\''), nl,
         write('\'I was running an analysis of Becker\'s blood,\' he says. \'Trying to figure out how to help him... his condition isn\'t improving.\''), nl,
         write('\'Did you find anything?\''), nl,
-        write('\'Not exactly,\' Reed admits. \'But something’s wrong. His blood is more acidic than normal, and it\'s not clotting at all.\''), nl,
+        write('\'Not exactly,\' Reed admits. \'But something\'s wrong. His blood is more acidic than normal, and it\'s not clotting at all.\''), nl,
         nl
 
     ; Person == walker ->
@@ -598,7 +597,7 @@ ignoring_noises :-
     ( grab_used ->
             write('\'Where are you going?\' Reed asks, confused, from behind your back.'), nl,
             write('You ignore him. All you can think about is running from the noise — not toward it.'), nl,
-            write('As you wish,\' Reed scolds as he starts walking back toward the power room. \'I’ll face it alone.\''), nl, nl
+            write('As you wish,\' Reed scolds as he starts walking back toward the power room. \'I\'ll face it alone.\''), nl, nl
         ;
             write('Reed decided not to follow you after you ignored him. He probably went to face the noise alone.'), nl, nl
     ),

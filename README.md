@@ -41,7 +41,11 @@ For Ubuntu from version 21.10 (amd64) for smalltalk download those packets and i
 ## Start the game
 
 To start the game on Ubuntu with proper setup, you need to go to appropriate directory with the files and run:
+- Prolog: `swipl alien.pl`
+- Haskell:
 ```
-swipl alien.pl
+ghc alien.hs -o alien
+./alien
 ```
+
 Enjoy the game :)

@@ -1,7 +1,7 @@
 import Data.Maybe (fromMaybe)
 import System.IO (hFlush, stdout)
 
--- rooms
+-- | rooms
 data RoomType
     = PowerRoom
     | TechnicalRoom
@@ -11,14 +11,14 @@ data RoomType
     | Shuttle
     deriving (Enum, Eq, Show)
 
--- things
+-- | things
 data ThingType
     = Fluff
     | Gun
     | Multitool
     deriving (Enum, Eq, Show)
 
--- characters
+-- | characters
 data CharacterType
     = Lambert
     | Dallas
@@ -27,13 +27,13 @@ data CharacterType
     | Reed
     deriving (Enum, Eq, Show)
 
--- valid choose
+-- | valid choose
 data ChooseType
     = MedBay
     | Isolation
     deriving (Enum, Eq, Show)
 
--- parsing part
+-- | parsing part
 parseRoom :: String -> Maybe RoomType
 parseRoom "PowerRoom"       = Just PowerRoom
 parseRoom "TechnicalRoom"   = Just TechnicalRoom
@@ -62,7 +62,7 @@ parseChoose "MedBay"           = Just MedBay
 parseChoose "Isolation"        = Just Isolation
 parseChoose _                  = Nothing
 
--- describe rooms
+-- | describe rooms
 describe :: RoomType -> String
 
 describe Medbay = "Becker's body is torn apart on the floor, blood pooling in dark, jagged patterns. The black substance spreads across the tiles, darker and thicker than in Dallas's murder. A faint meowing echoes from a cupboard.\n"
@@ -72,7 +72,7 @@ describe TechnicalRoom = "The servers hum steadily. MU/TH/ER's screen glows soft
 describe StorageBay = "Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one.\n"
 describe _ = "There is no such room.\n"
 
--- investigation responses
+-- | investigation responses
 investigationResponse :: CharacterType -> ChooseType -> String
 
 investigationResponse Lambert _ =
@@ -96,7 +96,7 @@ investigationResponse Walker Isolation =
     ++ "'Not exactly,' Walker replies. 'He's still in isolation – but he's dead, Ripley. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn't a malfunction. Someone on the crew must have unlocked the door.'\n"
 
 
--- current world state
+-- | current world state
 data WorldState = WorldState
   {
     inventory          :: [ThingType]
@@ -108,11 +108,14 @@ data WorldState = WorldState
   , countdown          :: Int
   , hintCounter        :: Int
   , beckerChoice       :: Maybe ChooseType
+  , forceInvestigation :: Bool
   , quartersInvestigated :: Bool
   , investigated       :: [CharacterType]
+  , shuttleClosed      :: Bool
   , gameOver           :: Bool
   }
 
+-- | starting world state
 initialWorldState :: WorldState
 initialWorldState = WorldState
   { inventory = []
@@ -137,11 +140,14 @@ initialWorldState = WorldState
   , countdown = 3
   , hintCounter = 0
   , beckerChoice = Nothing
+  , forceInvestigation = False
   , quartersInvestigated = False
   , investigated = []
+  , shuttleClosed = True
   , gameOver = False
   }
 
+-- | game loop logic
 gameLoop :: WorldState -> IO ()
 gameLoop ws
     | gameOver ws = putStrLn "Game Over. Thanks for playing!"
@@ -152,6 +158,7 @@ gameLoop ws
         ws' <- handleCommand input ws
         gameLoop ws'
 
+-- | handling command line commands
 handleCommand :: String -> WorldState -> IO WorldState
 handleCommand input ws =
     case words input of
@@ -171,7 +178,10 @@ handleCommand input ws =
             return ws
 
         ["Look"] -> do
-            putStrLn (describe (currentRoom ws))
+            if not (lights ws) then do
+                putStrLn "You can't see anything. It's completely dark."
+            else do
+                putStrLn (describe (currentRoom ws))
             return ws
 
         ["Go", roomStr] ->
@@ -190,6 +200,7 @@ handleCommand input ws =
             putStrLn "Unknown command. Type Help."
             return ws
 
+-- | display message for choice what to do with Becker 
 applyChoice :: ChooseType -> WorldState -> (String, WorldState)
 applyChoice choice ws
     | beckerChoice ws /= Nothing =
@@ -207,12 +218,7 @@ handleChoiceEffects Isolation ws =
 handleChoiceEffects MedBay ws =
     ws
 
-powerOffScene :: WorldState -> (String, WorldState)
-powerOffScene ws =
-    let msg = "You stretch and rise from the console, planning to look for the ship's cat, Fluff.\nAs you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it’s cut short.\nYou remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters."
-        ws' = ws { lights = False }
-    in (msg, ws')
-
+-- | logic for choice with Becker
 handleChooseCommand :: String -> WorldState -> IO WorldState
 handleChooseCommand arg ws =
     case parseChoose arg of
@@ -225,22 +231,93 @@ handleChooseCommand arg ws =
             putStrLn msg
             return ws'
 
+-- | lights go out scene
+powerOffScene :: WorldState -> (String, WorldState)
+powerOffScene ws =
+    let msg = "You stretch and rise from the console, planning to look for the ship's cat, Fluff.\nAs you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it’s cut short.\nYou remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters."
+        ws' = ws { lights = False }
+    in (msg, ws')
 
+-- | first body in living quarters
+firstBodyScene :: IO ()
+firstBodyScene = do
+    putStrLn "Your foot hits something soft. A low thud. The darkness is absolute."
+    putStrLn "You crouch, trembling fingers brushing against cold fabric… and colder flesh."
+    putStrLn "Dallas lies on the floor, throat torn open. Blood soaks into the carpet."
+    putStrLn "The blackout wasn’t an accident."
+    putStrLn ""
+
+-- | shutle loceked 
+shuttleLocked :: WorldState -> Bool
+shuttleLocked ws = shuttleClosed ws
+
+-- | are lights on
+lightsOn :: WorldState -> Bool
+lightsOn ws = lights ws
+
+-- was Becker decision made
+waitingForChoice :: WorldState -> Bool
+waitingForChoice ws = beckerChoice ws == Nothing
+
+-- | is player in the room
+alreadyInRoom :: RoomType -> WorldState -> Bool
+alreadyInRoom r ws = currentRoom ws == r
+
+-- | are forcing player to investigate
+mustInvestigate :: WorldState -> Bool
+mustInvestigate ws = forceInvestigation ws
+
+-- | main Go logic
 handleGo :: String -> WorldState -> IO WorldState
 handleGo roomStr ws =
     case parseRoom roomStr of
+
+        ---- | check room's existence
         Nothing -> do
             putStrLn "No such room."
             return ws
-        Just r -> do
-            putStrLn ("You enter the " ++ show r ++ ".")
-            return ws { currentRoom = r }
 
+        Just r -> do
+
+            ---- | can player enter the shuttle
+            if r == Shuttle && shuttleLocked ws then do
+                putStrLn "Cannot enter the shuttle. Only available in case of code red."
+                return ws
+            else if waitingForChoice ws then do
+                putStrLn "MU/TH/ER is waiting for your decision. You can't leave yet."
+                return ws
+            else if alreadyInRoom r ws then do
+                putStrLn "You are already here."
+                return ws
+            else if mustInvestigate ws then do
+                putStrLn "'Where the hell are you going, Ripley?' Reed snaps, grabbing your arm. \
+                         \ 'You're not leaving until we figure out what happened here. \
+                         \ You're the warrant officer - you lead the investigation.'"
+                putStrLn ""
+                return ws
+            else do
+                case r of
+                    Medbay   -> putStrLn "You enter the Medbay, noticing the isolation space."
+                    Shuttle  -> putStr ""     -- no message
+                    _        -> putStrLn ("You enter the " ++ show r ++ ".")
+
+                ---- | handle lights off scenario
+                if not (lightsOn ws) then
+                    case r of
+                        LivingQuarters -> firstBodyScene
+                        _ -> putStrLn "You almost trip over something you can’t see. Everything is still pitch black."
+                else return ()
+
+                return ws { currentRoom = r }
+
+
+-- | TODO
 handleTake :: String -> WorldState -> IO WorldState
 handleTake thingStr ws = do
     putStrLn "Taking not implemented yet."
     return ws
 
+-- | TODO
 handleInvestigate :: String -> WorldState -> IO WorldState
 handleInvestigate charStr ws = do
     putStrLn "Investigation not implemented yet."
@@ -287,6 +364,7 @@ printRooms = do
     hFlush stdout
     return ()
 
+-- | Main or start logic
 main :: IO ()
 main = do
     putStrLn "Do you want to play a game?"

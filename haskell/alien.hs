@@ -65,12 +65,12 @@ parseChoose _                  = Nothing
 -- | describe rooms
 describe :: RoomType -> String
 
-describe Medbay = "he beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.\n"
-describe LivingQuarters = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.\n"
-describe PowerRoom = "The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal.\n"
-describe TechnicalRoom = "The servers hum steadily. MU/TH/ER's screen glows softly, waiting silently for your next command.\n"
-describe StorageBay = "Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one.\n"
-describe _ = "There is no such room.\n"
+describe Medbay = "he beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
+describe LivingQuarters = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
+describe PowerRoom = "The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal."
+describe TechnicalRoom = "The servers hum steadily. MU/TH/ER's screen glows softly, waiting silently for your next command."
+describe StorageBay = "Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one."
+describe _ = "There is no such room."
 
 -- | investigation responses
 investigationResponse :: CharacterType -> ChooseType -> String
@@ -78,22 +78,22 @@ investigationResponse :: CharacterType -> ChooseType -> String
 investigationResponse Lambert _ =
     "'You were the first here, right, Lambert? Did you notice anything?'\n"
     ++ "'Not much,' she says, voice trembling. 'I was walking down the corridor when the power went out. Then the cat ran between my legs, yowling and howling, just before the scream. And then...' She glances tearfully at Dallas’ body and shivers. 'I don’t know who or what could have done this.'\n"
-    ++ "'Fluff’s instincts were always sharp,' you think to yourself. 'If he sensed danger before anyone else... maybe he’s seen what we haven’t.'\n"
+    ++ "'Fluff’s instincts were always sharp,' you think to yourself. 'If he sensed danger before anyone else... maybe he’s seen what we haven’t.'"
 
 investigationResponse Reed _ =
     "'What were you doing just now, Reed?'\n"
     ++ "'I was running an analysis of Becker's blood,' he says. 'Trying to figure out how to help him... his condition isn't improving.'\n"
     ++ "'Did you find anything?'\n"
-    ++ "'Not exactly,' Reed admits. 'But something's wrong. His blood is more acidic than normal, and it's not clotting at all.'\n"
+    ++ "'Not exactly,' Reed admits. 'But something's wrong. His blood is more acidic than normal, and it's not clotting at all.'"
 
 investigationResponse Walker MedBay =
     "'What do you mean by two people, Walker?'\n"
-    ++ "'I was fixing the power after it went out,' he says. 'Then I wanted to go straight to our quarters, but the medbay door was open. There was blood everywhere – Becker's blood, I think. I didn't want to investigate without you.'\n"
+    ++ "'I was fixing the power after it went out,' he says. 'Then I wanted to go straight to our quarters, but the medbay door was open. There was blood everywhere – Becker's blood, I think. I didn't want to investigate without you.'"
 
 investigationResponse Walker Isolation =
     "'I was fixing the power after it went out,' he says. 'Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere. So I went to check the isolation, and...'\n"
     ++ "'Did Becker leave quarantine?'\n"
-    ++ "'Not exactly,' Walker replies. 'He's still in isolation – but he's dead, Ripley. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn't a malfunction. Someone on the crew must have unlocked the door.'\n"
+    ++ "'Not exactly,' Walker replies. 'He's still in isolation – but he's dead, Ripley. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn't a malfunction. Someone on the crew must have unlocked the door.'"
 
 
 -- | current world state
@@ -252,7 +252,6 @@ firstBodyScene ws = do
     putStrLn "Only Lambert and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must've restored the power."
     putStrLn "Reed turns to you, his voice tight. 'You're the one in command now, Ripley. What do we do?'"
     putStrLn "Do you look around the room first, or investigate one of the crew members?"
-    putStrLn ""
     let ws' = ws
             { lights = True
             , forceInvestigation = True
@@ -322,18 +321,47 @@ handleGo roomStr ws =
 
                 return ws'
 
-
 -- | TODO
 handleTake :: String -> WorldState -> IO WorldState
 handleTake thingStr ws = do
     putStrLn "Taking not implemented yet."
     return ws
 
--- | TODO
+-- | investigation logic
 handleInvestigate :: String -> WorldState -> IO WorldState
-handleInvestigate charStr ws = do
-    putStrLn "Investigation not implemented yet."
-    return ws
+handleInvestigate charStr ws =
+    case parseCharacter charStr of
+        Nothing -> do
+            putStrLn $ "There is no such character as " ++ charStr ++ "."
+            putStrLn "To see characters type 'Crew'."
+            return ws
+
+        Just c ->
+            let inRoom = case lookup c (roomCharacters ws) of
+                            Just room -> room == currentRoom ws
+                            Nothing -> False
+                alive = not (c `elem` deadCharacters ws)
+                already = c `elem` investigated ws
+            in if not inRoom then do
+                   putStrLn "You can't investigate them - they're not in the room with you."
+                   return ws
+               else if not alive then do
+                   putStrLn "There's no point investigating the dead."
+                   return ws
+               else if already then do
+                   putStrLn "'I have nothing more to say.' is all they say."
+                   return ws
+               else do
+                   let ws' = ws { investigated = c : investigated ws
+                                , forceInvestigation = if c == Lambert then False else forceInvestigation ws
+                                }
+                   case c of
+                       Lambert -> putStrLn (investigationResponse Lambert (fromMaybe MedBay (beckerChoice ws')))
+                       Reed    -> putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
+                       Walker  -> putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
+                       _       -> putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
+
+                   return ws'
 
 -- help
 printHelp :: IO ()

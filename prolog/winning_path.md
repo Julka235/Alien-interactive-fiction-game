@@ -1,5 +1,6 @@
 # One of the possible paths to win the game
 ## WARNING: Spoilers ahead
+**swipl alien.pl**
 Do you want to play a game?
 You are the Warrant Officer aboard the spaceship Nostromo, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship’s dark corridors...
 But before you continue your journey:
@@ -14,7 +15,7 @@ rooms.               -- to see the list of the rooms.
 instructions.        -- to see this list again.
 stop.                -- to end the game.
 
-?- start.
+**?- start.**
 MU/TH/ER, main spaceship's computer hums softly when it prints the response on the screen.
 MU/TH/ER: Hello, Warrant Officer Ripley. Here is the report you requested.
 Report of Mission 067801
@@ -29,7 +30,7 @@ Type either 'put(medbay).' or 'put(isolation).'
 
 true.
 
-?- put(isolation).
+**?- put(isolation).**
 MU/TH/ER: ... Command sent.
 Per Corporate protocol, every minor decision must be logged, so you update the mission report. You stretch and rise from the console, planning to look for the ship’s cat, Fluff.
 As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it’s cut short.
@@ -37,7 +38,7 @@ You remember the emergency procedure: in a total blackout, all crew members are 
 
 true.
 
-?- go(living_quarters).
+**?- go(living_quarters).**
 You enter the living_quarters
 You step into the living quarters. The lights flicker back on, blinding you for a moment.
 A scream cuts through the silence - Lambert's. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It's Dallas - your captain and friend.
@@ -47,12 +48,12 @@ Do you look around the room first, or investigate one of the crew members?
 
 true.
 
-?- look.
+**?- look.**
 The blood is still spreading across the floor. A strange black substance mixes with it in the wounds. They don’t look human-made - jagged and mangled, as if something with a jaw full of sharp teeth tore them.
 
 true.
 
-?- investigate(lambert).
+**?- investigate(lambert).**
 'You were the first here, right, Lambert?'
 'Yeah,' she says, voice trembling. 'I was walking down the corridor when the power went out. Then I heard the scream and...' She glances tearfully at Dallas’ body. 'I don’t know who or what could have done this.'
 'Did you notice anything else?'
@@ -66,7 +67,7 @@ Wait, did he just say two?
 
 true.
 
-?- investigate(walker).
+**?- investigate(walker).**
 'What do you mean by two people, Walker?'
 'I was fixing the power after it went out,' he says. 'Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere. So I went to check the isolation, and...'
 'Did Becker leave quarantine?'
@@ -74,7 +75,7 @@ true.
 
 true.
 
-?- go(medbay).
+**?- go(medbay).**
 You enter the medbay, noticing the isolation space.
 Becker's body lies scattered across the floor, blood seeping into jagged patterns. It looks as though something forced its way out of him - ripping through his chest from the inside. The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.
 A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.
@@ -89,15 +90,15 @@ Better not to split up when there might be another enemy aboard.
 
 true.
 
-?- take(fluff).
+**?- take(fluff).**
 Taken.
 true.
 
-?- grab(reed).
+**?- grab(reed).**
 Reed will go with you.
 true.
 
-?- go(power_room).
+**?- go(power_room).**
 You enter the power_room
 DA/TU/ER, the secondary computer, hums softly - a corporate file open.
 DA/TU/ER: Access granted. Update on mission 067801: Corporate directive changed. Priority one: Ensure return of the organism for analysis. Crew expendable.
@@ -116,23 +117,23 @@ You have only three minutes to get off this ship... That means you can visit up 
 
 true.
 
-?- go(storage_bay).
+**?- go(storage_bay).**
 You can visit 2 more rooms - with the shuttle bay as the last one - before the autodestruction sequence begins.
 
 You enter the storage_bay
 
 true.
 
-?- look.
+**?- look.**
 Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one.
 
 true.
 
-?- take(gun).
+**?- take(gun).**
 Taken.
 true.
 
-?- go(shuttle).
+**?- go(shuttle).**
 You reach the shuttle just in time and take off.
 You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule.
 Fluff hisses at the food cupboard. Your heart race - you realize the alien has made it abroad.

@@ -65,7 +65,7 @@ parseChoose _                  = Nothing
 -- | describe rooms
 describe :: RoomType -> String
 
-describe Medbay = "Becker's body is torn apart on the floor, blood pooling in dark, jagged patterns. The black substance spreads across the tiles, darker and thicker than in Dallas's murder. A faint meowing echoes from a cupboard.\n"
+describe Medbay = "he beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.\n"
 describe LivingQuarters = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room.\n"
 describe PowerRoom = "The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal.\n"
 describe TechnicalRoom = "The servers hum steadily. MU/TH/ER's screen glows softly, waiting silently for your next command.\n"
@@ -180,9 +180,15 @@ handleCommand input ws =
         ["Look"] -> do
             if not (lights ws) then do
                 putStrLn "You can't see anything. It's completely dark."
+                return ws
+
+            else if not (quartersInvestigated ws) && currentRoom ws == LivingQuarters then do
+                putStrLn "The blood is still spreading across the floor. A strange black substance mixes with it in the wounds. They don’t look human-made — jagged and mangled, as if something with a jaw full of sharp teeth tore them."
+                return ws { quartersInvestigated = True }
+
             else do
                 putStrLn (describe (currentRoom ws))
-            return ws
+                return ws
 
         ["Go", roomStr] ->
             handleGo roomStr ws
@@ -239,13 +245,20 @@ powerOffScene ws =
     in (msg, ws')
 
 -- | first body in living quarters
-firstBodyScene :: IO ()
-firstBodyScene = do
-    putStrLn "Your foot hits something soft. A low thud. The darkness is absolute."
-    putStrLn "You crouch, trembling fingers brushing against cold fabric… and colder flesh."
-    putStrLn "Dallas lies on the floor, throat torn open. Blood soaks into the carpet."
-    putStrLn "The blackout wasn’t an accident."
+firstBodyScene :: WorldState -> IO WorldState
+firstBodyScene ws = do
+    putStrLn "You step into the living quarters. The lights flicker back on, blinding you for a moment."
+    putStrLn "A scream cuts through the silence - Lambert's. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It's Dallas - your captain and friend."
+    putStrLn "Only Lambert and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must've restored the power."
+    putStrLn "Reed turns to you, his voice tight. 'You're the one in command now, Ripley. What do we do?'"
+    putStrLn "Do you look around the room first, or investigate one of the crew members?"
     putStrLn ""
+    let ws' = ws
+            { lights = True
+            , forceInvestigation = True
+            , deadCharacters = Dallas : deadCharacters ws
+            }
+    return ws'
 
 -- | shutle loceked 
 shuttleLocked :: WorldState -> Bool
@@ -271,15 +284,10 @@ mustInvestigate ws = forceInvestigation ws
 handleGo :: String -> WorldState -> IO WorldState
 handleGo roomStr ws =
     case parseRoom roomStr of
-
-        ---- | check room's existence
         Nothing -> do
             putStrLn "No such room."
             return ws
-
         Just r -> do
-
-            ---- | can player enter the shuttle
             if r == Shuttle && shuttleLocked ws then do
                 putStrLn "Cannot enter the shuttle. Only available in case of code red."
                 return ws
@@ -298,17 +306,21 @@ handleGo roomStr ws =
             else do
                 case r of
                     Medbay   -> putStrLn "You enter the Medbay, noticing the isolation space."
-                    Shuttle  -> putStr ""     -- no message
+                    Shuttle  -> return ()  -- no message
                     _        -> putStrLn ("You enter the " ++ show r ++ ".")
 
-                ---- | handle lights off scenario
-                if not (lightsOn ws) then
-                    case r of
-                        LivingQuarters -> firstBodyScene
-                        _ -> putStrLn "You almost trip over something you can’t see. Everything is still pitch black."
-                else return ()
+                -- handle lights off scenario
+                ws' <- if not (lightsOn ws) then
+                           case r of
+                               LivingQuarters -> do
+                                   wsAfterScene <- firstBodyScene ws
+                                   return (wsAfterScene { currentRoom = r })
+                               _ -> do
+                                   putStrLn "You almost trip over something you can’t see. Everything is still pitch black."
+                                   return (ws { currentRoom = r })
+                       else return (ws { currentRoom = r })
 
-                return ws { currentRoom = r }
+                return ws'
 
 
 -- | TODO

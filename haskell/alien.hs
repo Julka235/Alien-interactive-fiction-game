@@ -20,8 +20,8 @@ data ThingType
 
 -- | characters
 data CharacterType
-    = Lambert
-    | Dallas
+    = Kendle
+    | Douglas
     | Becker
     | Walker
     | Reed
@@ -50,8 +50,8 @@ parseThing "Multitool"      = Just Multitool
 parseThing _                = Nothing
 
 parseCharacter :: String -> Maybe CharacterType
-parseCharacter "Lambert"    = Just Lambert
-parseCharacter "Dallas"     = Just Dallas
+parseCharacter "Kendle"    = Just Kendle
+parseCharacter "Douglas"     = Just Douglas
 parseCharacter "Becker"     = Just Becker
 parseCharacter "Walker"     = Just Walker
 parseCharacter "Reed"       = Just Reed
@@ -68,16 +68,16 @@ describe :: RoomType -> String
 describe Medbay = "he beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
 describe LivingQuarters = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
 describe PowerRoom = "The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal."
-describe TechnicalRoom = "The servers hum steadily. MU/TH/ER's screen glows softly, waiting silently for your next command."
+describe TechnicalRoom = "The servers hum steadily. NAVCORE's screen glows softly, waiting silently for your next command."
 describe StorageBay = "Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one."
 describe _ = "There is no such room."
 
 -- | investigation responses
 investigationResponse :: CharacterType -> ChooseType -> String
 
-investigationResponse Lambert _ =
-    "'You were the first here, right, Lambert? Did you notice anything?'\n"
-    ++ "'Not much,' she says, voice trembling. 'I was walking down the corridor when the power went out. Then the cat ran between my legs, yowling and howling, just before the scream. And then...' She glances tearfully at Dallas’ body and shivers. 'I don’t know who or what could have done this.'\n"
+investigationResponse Kendle _ =
+    "'You were the first here, right, Kendle? Did you notice anything?'\n"
+    ++ "'Not much,' she says, voice trembling. 'I was walking down the corridor when the power went out. Then the cat ran between my legs, yowling and howling, just before the scream. And then...' She glances tearfully at Douglas’ body and shivers. 'I don’t know who or what could have done this.'\n"
     ++ "'Fluff’s instincts were always sharp,' you think to yourself. 'If he sensed danger before anyone else... maybe he’s seen what we haven’t.'"
 
 investigationResponse Reed _ =
@@ -93,7 +93,7 @@ investigationResponse Walker MedBay =
 investigationResponse Walker Isolation =
     "'I was fixing the power after it went out,' he says. 'Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere. So I went to check the isolation, and...'\n"
     ++ "'Did Becker leave quarantine?'\n"
-    ++ "'Not exactly,' Walker replies. 'He's still in isolation – but he's dead, Ripley. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn't a malfunction. Someone on the crew must have unlocked the door.'"
+    ++ "'Not exactly,' Walker replies. 'He's still in isolation – but he's dead, Pierce. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn't a malfunction. Someone on the crew must have unlocked the door.'"
 
 
 -- | current world state
@@ -127,13 +127,13 @@ initialWorldState = WorldState
       ]
   , roomCharacters =
       [ (Reed, LivingQuarters)
-      , (Lambert, LivingQuarters)
+      , (Kendle, LivingQuarters)
       , (Walker, PowerRoom)
-      , (Dallas, LivingQuarters)
+      , (Douglas, LivingQuarters)
       , (Becker, Medbay)
       ]
   , deadCharacters =
-      [ Dallas
+      [ Douglas
       , Becker
       ]
   , lights = True
@@ -215,7 +215,7 @@ applyChoice choice ws
         let wsChosen = ws { beckerChoice = Just choice }
             wsHandled = handleChoiceEffects choice wsChosen
             (powerMsg, wsFinal) = powerOffScene wsHandled
-            msg = "MU/TH/ER: Your choice has been recorded: " ++ show choice ++ ".. Command sent.\n" ++ powerMsg
+            msg = "NAVCORE: Your choice has been recorded: " ++ show choice ++ ".. Command sent.\n" ++ powerMsg
         in (msg, wsFinal)
 
 handleChoiceEffects :: ChooseType -> WorldState -> WorldState
@@ -248,14 +248,14 @@ powerOffScene ws =
 firstBodyScene :: WorldState -> IO WorldState
 firstBodyScene ws = do
     putStrLn "You step into the living quarters. The lights flicker back on, blinding you for a moment."
-    putStrLn "A scream cuts through the silence - Lambert's. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It's Dallas - your captain and friend."
-    putStrLn "Only Lambert and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must've restored the power."
-    putStrLn "Reed turns to you, his voice tight. 'You're the one in command now, Ripley. What do we do?'"
+    putStrLn "A scream cuts through the silence - Kendle's. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It's Douglas - your captain and friend."
+    putStrLn "Only Kendle and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must've restored the power."
+    putStrLn "Reed turns to you, his voice tight. 'You're the one in command now, Pierce. What do we do?'"
     putStrLn "Do you look around the room first, or investigate one of the crew members?"
     let ws' = ws
             { lights = True
             , forceInvestigation = True
-            , deadCharacters = Dallas : deadCharacters ws
+            , deadCharacters = Douglas : deadCharacters ws
             }
     return ws'
 
@@ -291,13 +291,13 @@ handleGo roomStr ws =
                 putStrLn "Cannot enter the shuttle. Only available in case of code red."
                 return ws
             else if waitingForChoice ws then do
-                putStrLn "MU/TH/ER is waiting for your decision. You can't leave yet."
+                putStrLn "NAVCORE is waiting for your decision. You can't leave yet."
                 return ws
             else if alreadyInRoom r ws then do
                 putStrLn "You are already here."
                 return ws
             else if mustInvestigate ws then do
-                putStrLn "'Where the hell are you going, Ripley?' Reed snaps, grabbing your arm. \
+                putStrLn "'Where the hell are you going, Pierce?' Reed snaps, grabbing your arm. \
                          \ 'You're not leaving until we figure out what happened here. \
                          \ You're the warrant officer - you lead the investigation.'"
                 putStrLn ""
@@ -353,10 +353,10 @@ handleInvestigate charStr ws =
                    return ws
                else do
                    let ws' = ws { investigated = c : investigated ws
-                                , forceInvestigation = if c == Lambert then False else forceInvestigation ws
+                                , forceInvestigation = if c == Kendle then False else forceInvestigation ws
                                 }
                    case c of
-                       Lambert -> putStrLn (investigationResponse Lambert (fromMaybe MedBay (beckerChoice ws')))
+                       Kendle -> putStrLn (investigationResponse Kendle (fromMaybe MedBay (beckerChoice ws')))
                        Reed    -> putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
                        Walker  -> putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
                        _       -> putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
@@ -383,8 +383,8 @@ printCrew :: IO ()
 printCrew = do
     putStrLn "Here is the list of the members of your crew:"
     putStrLn "Fluff      - spaceship's cat."
-    putStrLn "Dallas     - captain of the Nostromo spaceship."
-    putStrLn "Lambert    - navigator."
+    putStrLn "Douglas    - captain of the Talume spaceship."
+    putStrLn "Kendle     - navigator."
     putStrLn "Walker     - chief engineer."
     putStrLn "Becker     - executive officer."
     putStrLn "Reed       - science officer."
@@ -394,11 +394,11 @@ printCrew = do
 -- rooms
 printRooms :: IO ()
 printRooms = do
-    putStrLn "Here is the list of rooms aboard the Nostromo spaceship."
+    putStrLn "Here is the list of rooms aboard the Talume spaceship."
     putStrLn "LivingQuarters    - where the crew sleeps and eats."
     putStrLn "Medbay            - medical bay with an internal isolation space."
     putStrLn "StorageBay        - storage for weapons and canned supplies."
-    putStrLn "TechnicalRoom     - houses the main computer, MU/TH/ER."
+    putStrLn "TechnicalRoom     - houses the main computer, NAVCORE."
     putStrLn "PowerRoom         - controls the ship's entire power system."
     putStrLn "Shuttle           - escape vessel for emergency departure."
     hFlush stdout
@@ -409,16 +409,16 @@ main :: IO ()
 main = do
     putStrLn "Do you want to play a game?"
     _ <- getLine
-    putStrLn "You are the Warrant Officer aboard the spaceship Nostromo, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship's dark corridors..."
+    putStrLn "You are the Diagnostics Officer aboard the spaceship Talume, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship's dark corridors..."
     putStrLn "But before you continue your journey:"
     printHelp
     putStrLn ""
-    putStrLn "MU/TH/ER, main spaceship's computer hums softly when it prints the response on the screen."
-    putStrLn "MU/TH/ER: Hello, Warrant Officer Ripley. Here is the report of Mission 067801"
-    putStrLn "Corporate command authorized the spaceship Nostromo to investigate a possible life form on planet 26-Draconis. Nostromo landed on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed left the ship to investigate. After 6 hours, Nostromo lost contact with Executive Officer Becker. Science Officer Reed reported unsuccessful search attempts."
-    putStrLn "MU/TH/ER: Anything else I can do for you, Officer?"
+    putStrLn "NAVCORE, main spaceship's computer hums softly when it prints the response on the screen."
+    putStrLn "NAVCORE: Hello, Diagnostics Officer Pierce. Here is the report of Mission 067801"
+    putStrLn "Corporate command authorized the spaceship Talume to investigate a possible life form on planet 26-Draconis. Talume landed on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed left the ship to investigate. After 6 hours, Talume lost contact with Executive Officer Becker. Science Officer Reed reported unsuccessful search attempts."
+    putStrLn "NAVCORE: Anything else I can do for you, Officer?"
     putStrLn "Before you can respond, the main console clears. A new line appears."
-    putStrLn "MU/TH/ER: Science Officer Reed has re-entered the Nostromo carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?"
+    putStrLn "NAVCORE: Science Officer Reed has re-entered the Talume carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?"
     putStrLn ""
     putStrLn "Type either 'Choose MedBay' or 'Choose Isolation'."
     hFlush stdout

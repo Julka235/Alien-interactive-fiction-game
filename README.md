@@ -6,7 +6,7 @@ Project realised as part of Programming Paradigms course at WUT.
 
 ## Premise
 
-The game allows the player to personate warrant officer Riley, one the passangers of the Nostromo spaceship sent on a mission to investiagte a potential lifeform on planet *Darconis-26*. But not everything goes according to plan, and when Ripley has to take commmand, she realises there may be another form of danger lurking in the dark corridors.
+The game allows the player to personate diagnostics officer Pierce, one the passangers of the Talume spaceship sent on a mission to investiagte a potential lifeform on planet *Darconis-26*. But not everything goes according to plan there may be another form of danger lurking in the dark corridors.
 
 ## Rules
 

@@ -65,7 +65,7 @@ parseChoose _                  = Nothing
 -- | describe rooms
 describe :: RoomType -> String
 
-describe Medbay = "he beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
+describe Medbay = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
 describe LivingQuarters = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
 describe PowerRoom = "The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal."
 describe TechnicalRoom = "The servers hum steadily. NAVCORE's screen glows softly, waiting silently for your next command."
@@ -150,7 +150,7 @@ initialWorldState = WorldState
 -- | game loop logic
 gameLoop :: WorldState -> IO ()
 gameLoop ws
-    | gameOver ws = putStrLn "Game Over. Thanks for playing!"
+    | gameOver ws = putStrLn "GAME OVER. Hope you join the Talume again soon."
     | otherwise = do
         putStr "> "
         hFlush stdout
@@ -215,7 +215,7 @@ applyChoice choice ws
         let wsChosen = ws { beckerChoice = Just choice }
             wsHandled = handleChoiceEffects choice wsChosen
             (powerMsg, wsFinal) = powerOffScene wsHandled
-            msg = "NAVCORE: Your choice has been recorded: " ++ show choice ++ ".. Command sent.\n" ++ powerMsg
+            msg = "NAVCORE: Your choice has been recorded: " ++ show choice ++ ". Command sent.\n" ++ powerMsg
         in (msg, wsFinal)
 
 handleChoiceEffects :: ChooseType -> WorldState -> WorldState
@@ -259,7 +259,7 @@ firstBodyScene ws = do
             }
     return ws'
 
--- | shutle loceked 
+-- | shutle locked 
 shuttleLocked :: WorldState -> Bool
 shuttleLocked ws = shuttleClosed ws
 
@@ -321,11 +321,28 @@ handleGo roomStr ws =
 
                 return ws'
 
--- | TODO
+-- | take logic
 handleTake :: String -> WorldState -> IO WorldState
-handleTake thingStr ws = do
-    putStrLn "Taking not implemented yet."
-    return ws
+handleTake thingStr ws = 
+    case parseThing thingStr of
+        Nothing -> do
+            putStrLn "There is no such thing to take."
+            return ws
+        Just c ->
+            let inRoom = case lookup c (roomThings ws) of
+                            Just room -> room == currentRoom ws
+                            Nothing -> False
+                already = c `elem` inventory ws
+            in if not inRoom then do
+                    putStrLn "It is not here."
+                    return ws
+                else if already then do
+                    putStrLn "You\'re already holding it!"
+                    return ws
+                else do
+                    let ws' = ws { inventory = c : inventory ws}
+                    putStrLn "Taken."
+                    return ws'
 
 -- | investigation logic
 handleInvestigate :: String -> WorldState -> IO WorldState

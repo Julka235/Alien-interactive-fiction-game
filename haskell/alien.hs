@@ -110,6 +110,7 @@ data WorldState = WorldState
   , beckerChoice       :: Maybe ChooseType
   , forceInvestigation :: Bool
   , quartersInvestigated :: Bool
+  , noisesHeard        :: Bool
   , investigated       :: [CharacterType]
   , shuttleClosed      :: Bool
   , gameOver           :: Bool
@@ -142,6 +143,7 @@ initialWorldState = WorldState
   , beckerChoice = Nothing
   , forceInvestigation = False
   , quartersInvestigated = False
+  , noisesHeard = False
   , investigated = []
   , shuttleClosed = True
   , gameOver = False
@@ -271,6 +273,29 @@ walkerJoinsScene ws = do
     putStrLn "Wait, did he just say two?"
     return ws'
 
+-- | alternative scenes after leaving living quarters
+secondBodyScene :: WorldState -> IO WorldState
+secondBodyScene ws = do
+    let ws' = (moveCharacter Reed Medbay ws)
+          { hintCounter = hintCounter ws + 1
+          , deadCharacters = Becker : deadCharacters ws
+          , forceInvestigation = True
+          , quartersInvestigated = True
+          , noisesHeard = True
+          }
+    putStrLn "Becker lies collapsed on the medbay floor - or rather, what\'s left of him does. His body has been hollowed out completely, reduced to a deflated shell as if something had crawled inside him, worn him, and then peeled him off like clothing.The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil."
+    putStrLn "A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard."
+    putStrLn "A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches."
+    putStrLn "The door swings open. Reed steps inside, pale and grim."
+    putStrLn "\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\'"
+    putStrLn "\'How do I know you\'re not the killer?\'"
+    putStrLn "\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\'"
+    if hintCounter ws' >= 2 then do
+        putStrLn "At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?"
+        putStrLn "Better not to split up when there might be another enemy aboard."
+    else return ()
+    putStrLn "If you want to take Reed with you, type \'Grab Reed.\' before going to the next room."
+    return ws'
 
 -- | shutle locked 
 shuttleLocked :: WorldState -> Bool
@@ -324,6 +349,17 @@ handleGo roomStr ws =
                          \ You're the warrant officer - you lead the investigation.'"
                 putStrLn ""
                 return ws
+            else if lightsOn ws && not (noisesHeard ws) then do
+                case r of
+                    Medbay   -> do 
+                        putStrLn "You enter the Medbay, noticing the isolation space."
+                        ws' <- secondBodyScene ws
+                        return ws'
+                    Shuttle  -> do 
+                        return (ws { currentRoom = r })
+                    _        -> do 
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        return (ws { currentRoom = r })
             else do
                 case r of
                     Medbay   -> putStrLn "You enter the Medbay, noticing the isolation space."

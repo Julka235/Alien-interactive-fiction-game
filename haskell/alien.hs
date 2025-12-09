@@ -307,6 +307,17 @@ noisePowerRoomScene ws = do
           , blockedInvestigation = True
           , noisesHeard = True
           }
+    putStrLn "A strange noise comes from the power room, followed by a scream. Your breath catches."
+    putStrLn "The door swings open. Reed steps inside, pale and grim."
+    putStrLn "\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\'"
+    putStrLn "\'How do I know you\'re not the killer?\'"
+    putStrLn "\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\'"
+    if hintCounter ws' >= 2 then do
+        putStrLn "At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?"
+        putStrLn "Better not to split up when there might be another enemy aboard."
+    else return ()
+    putStrLn "If you want to take Reed with you, type \'Grab Reed.\' before going to the next room."
+    return ws'
 
 -- | shutle locked 
 shuttleLocked :: WorldState -> Bool
@@ -368,9 +379,13 @@ handleGo roomStr ws =
                         return (wsAfterScene{ currentRoom = r})
                     Shuttle  -> do 
                         return (ws { currentRoom = r })
-                    _        -> do 
+                    PowerRoom -> do 
                         putStrLn ("You enter the " ++ show r ++ ".")
                         return (ws { currentRoom = r })
+                    _        -> do 
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        wsAfterScene <- noisePowerRoomScene ws
+                        return (wsAfterScene{ currentRoom = r})
             else do
                 case r of
                     Medbay   -> putStrLn "You enter the Medbay, noticing the isolation space."

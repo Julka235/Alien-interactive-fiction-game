@@ -152,6 +152,7 @@ gameLoop :: WorldState -> IO ()
 gameLoop ws
     | gameOver ws = putStrLn "GAME OVER. Hope you join the Talume again soon."
     | otherwise = do
+        putStrLn ""
         putStr "> "
         hFlush stdout
         input <- getLine
@@ -425,6 +426,7 @@ printRooms = do
 main :: IO ()
 main = do
     putStrLn "Do you want to play a game?"
+    putStrLn "[Press Enter to start.]"
     _ <- getLine
     putStrLn "You are the Diagnostics Officer aboard the spaceship Talume, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship's dark corridors..."
     putStrLn "But before you continue your journey:"

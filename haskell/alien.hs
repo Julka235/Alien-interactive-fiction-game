@@ -299,6 +299,15 @@ secondBodyScene ws = do
     putStrLn "If you want to take Reed with you, type \'Grab Reed.\' before going to the next room."
     return ws'
 
+-- | if player goes to another room
+noisePowerRoomScene :: WorldState -> IO WorldState
+noisePowerRoomScene ws = do
+    let ws' = (moveCharacter Reed (currentRoom ws) ws)
+          { deadCharacters = Becker : deadCharacters ws
+          , blockedInvestigation = True
+          , noisesHeard = True
+          }
+
 -- | shutle locked 
 shuttleLocked :: WorldState -> Bool
 shuttleLocked ws = shuttleClosed ws

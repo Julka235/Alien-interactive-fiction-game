@@ -110,6 +110,7 @@ data WorldState = WorldState
   , beckerChoice       :: Maybe ChooseType
   , forceInvestigation :: Bool
   , quartersInvestigated :: Bool
+  , blockedInvestigation :: Bool
   , noisesHeard        :: Bool
   , investigated       :: [CharacterType]
   , shuttleClosed      :: Bool
@@ -143,6 +144,7 @@ initialWorldState = WorldState
   , beckerChoice = Nothing
   , forceInvestigation = False
   , quartersInvestigated = False
+  , blockedInvestigation = False
   , noisesHeard = False
   , investigated = []
   , shuttleClosed = True
@@ -274,13 +276,13 @@ walkerJoinsScene ws = do
     return ws'
 
 -- | alternative scenes after leaving living quarters
+-- | if player goes to Medbay
 secondBodyScene :: WorldState -> IO WorldState
 secondBodyScene ws = do
     let ws' = (moveCharacter Reed Medbay ws)
           { hintCounter = hintCounter ws + 1
           , deadCharacters = Becker : deadCharacters ws
-          , forceInvestigation = True
-          , quartersInvestigated = True
+          , blockedInvestigation = True
           , noisesHeard = True
           }
     putStrLn "Becker lies collapsed on the medbay floor - or rather, what\'s left of him does. His body has been hollowed out completely, reduced to a deflated shell as if something had crawled inside him, worn him, and then peeled him off like clothing.The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil."
@@ -353,8 +355,8 @@ handleGo roomStr ws =
                 case r of
                     Medbay   -> do 
                         putStrLn "You enter the Medbay, noticing the isolation space."
-                        ws' <- secondBodyScene ws
-                        return ws'
+                        wsAfterScene <- secondBodyScene ws
+                        return (wsAfterScene{ currentRoom = r})
                     Shuttle  -> do 
                         return (ws { currentRoom = r })
                     _        -> do 
@@ -422,6 +424,9 @@ handleInvestigate charStr ws =
                    return ws
                else if not alive then do
                    putStrLn "There's no point investigating the dead."
+                   return ws
+               else if blockedInvestigation ws then do
+                   putStrLn "There\'s no time to waste on talking now."
                    return ws
                else if already then do
                    putStrLn "'I have nothing more to say.' is all they say."

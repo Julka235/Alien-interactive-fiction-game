@@ -260,6 +260,18 @@ firstBodyScene ws = do
             }
     return ws'
 
+-- | Walker joins the rest of the crew at living quarters
+walkerJoinsScene :: WorldState -> IO WorldState
+walkerJoinsScene ws = do
+    let ws' = moveCharacter Walker LivingQuarters ws
+    putStrLn "Before you can decide what to do next,  Walker - chief engineer - bursts in."
+    putStrLn "\'I fixed the po-\' he stops, startled by Douglas\'s dead body. \'What the hell happened here?\'"
+    putStrLn "\'The captain\'s dead,\' Reed says. \'Where have you been?\'"
+    putStrLn "\'When the lights went out, I went to the power room to restore them,\' Walker explains. \'I didn\'t expect two people to die while I was gone.\'"
+    putStrLn "Wait, did he just say two?"
+    return ws'
+
+
 -- | shutle locked 
 shuttleLocked :: WorldState -> Bool
 shuttleLocked ws = shuttleClosed ws
@@ -279,6 +291,15 @@ alreadyInRoom r ws = currentRoom ws == r
 -- | are forcing player to investigate
 mustInvestigate :: WorldState -> Bool
 mustInvestigate ws = forceInvestigation ws
+
+-- | move character to different room
+moveCharacter :: CharacterType -> RoomType -> WorldState -> WorldState
+moveCharacter c newRoom ws =
+    ws { roomCharacters = map update (roomCharacters ws) }
+  where
+    update (x, oldRoom)
+        | x == c    = (x, newRoom)
+        | otherwise = (x, oldRoom)
 
 -- | main Go logic
 handleGo :: String -> WorldState -> IO WorldState
@@ -374,12 +395,18 @@ handleInvestigate charStr ws =
                                 , forceInvestigation = if c == Kendle then False else forceInvestigation ws
                                 }
                    case c of
-                       Kendle -> putStrLn (investigationResponse Kendle (fromMaybe MedBay (beckerChoice ws')))
-                       Reed    -> putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
-                       Walker  -> putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
-                       _       -> putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
-
-                   return ws'
+                       Kendle -> do
+                           putStrLn (investigationResponse Kendle (fromMaybe MedBay (beckerChoice ws')))
+                           walkerJoinsScene ws'
+                       Reed -> do
+                           putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
+                           return ws'
+                       Walker -> do
+                           putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
+                           return ws'
+                       _ -> do
+                           putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
+                           return ws'
 
 -- help
 printHelp :: IO ()

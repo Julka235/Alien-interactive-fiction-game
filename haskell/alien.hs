@@ -112,6 +112,7 @@ data WorldState = WorldState
   , quartersInvestigated :: Bool
   , blockedInvestigation :: Bool
   , noisesHeard        :: Bool
+  , grabUsed           :: Bool
   , investigated       :: [CharacterType]
   , shuttleClosed      :: Bool
   , gameOver           :: Bool
@@ -146,6 +147,7 @@ initialWorldState = WorldState
   , quartersInvestigated = False
   , blockedInvestigation = False
   , noisesHeard = False
+  , grabUsed = False
   , investigated = []
   , shuttleClosed = True
   , gameOver = False
@@ -206,6 +208,9 @@ handleCommand input ws =
 
         ["Choose", choiceStr] ->
             handleChooseCommand choiceStr ws
+        
+        ["Grab", charStr] ->
+            handleGrab charStr ws
 
         _ -> do
             putStrLn "Unknown command. Type Help."
@@ -296,7 +301,7 @@ secondBodyScene ws = do
         putStrLn "At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?"
         putStrLn "Better not to split up when there might be another enemy aboard."
     else return ()
-    putStrLn "If you want to take Reed with you, type \'Grab Reed.\' before going to the next room."
+    putStrLn "If you want to take Reed with you, type \'Grab Reed\' before going to the next room."
     return ws'
 
 -- | if player goes to another room
@@ -316,7 +321,7 @@ noisePowerRoomScene ws = do
         putStrLn "At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?"
         putStrLn "Better not to split up when there might be another enemy aboard."
     else return ()
-    putStrLn "If you want to take Reed with you, type \'Grab Reed.\' before going to the next room."
+    putStrLn "If you want to take Reed with you, type \'Grab Reed\' before going to the next room."
     return ws'
 
 -- | shutle locked 
@@ -472,6 +477,27 @@ handleInvestigate charStr ws =
                        _ -> do
                            putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
                            return ws'
+
+handleGrab :: String -> WorldState -> IO WorldState
+handleGrab charStr ws =
+    case parseCharacter charStr of
+        Nothing -> do
+            putStrLn "You cannot grab them." 
+            return ws
+        Just c ->
+            if not (noisesHeard ws) then do
+                putStrLn "You don\'t need to grab anyone." 
+                return ws
+            else if c /= Reed then do 
+                putStrLn "You cannot grab them." 
+                return ws
+            else if grabUsed ws then do 
+                putStrLn "Reed is already with you." 
+                return ws
+            else do
+                let ws' = ws {grabUsed = True}
+                putStrLn "Reed will go with you." 
+                return ws'
 
 -- help
 printHelp :: IO ()

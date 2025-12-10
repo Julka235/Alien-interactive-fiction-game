@@ -355,7 +355,20 @@ confrontationScene ws =
         putStrLn "NAVCORE-BETA: Updated report for mission 067801: Time 9036919h: Diagnostics Officer Pierce found dead."
         return ws'
 
-    
+-- | ignoring the noises
+ignoringNoisesScene :: WorldState -> IO WorldState
+ignoringNoisesScene ws = do
+    let ws' = ws { deadCharacters = Reed : deadCharacters ws}
+    if grabUsed ws then do
+        putStrLn "\'Where are you going?\' Reed asks, confused, from behind your back."
+        putStrLn "You ignore him. All you can think about is running from the noise — not toward it."
+        putStrLn "As you wish,\' Reed scolds as he starts walking back toward the power room. \'I\'ll face it alone.\'"
+    else do
+        putStrLn "Reed decided not to follow you after you ignored him. He probably went to face the noise alone."
+    putStrLn "Then, before you can do or think anything else, the spaceship alarm goes off. You hear NAVCORE automated voice through the speakers:"
+    putStrLn "Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently."
+    return ws'
+
 
 -- | shutle locked 
 shuttleLocked :: WorldState -> Bool
@@ -417,7 +430,8 @@ handleGo roomStr ws =
                         return (wsAfterScene{ currentRoom = r})
                     _         -> do
                         putStrLn ("You enter the " ++ show r ++ ".")
-                        return (ws { currentRoom = r })
+                        wsAfterScene <- ignoringNoisesScene ws
+                        return (wsAfterScene{ currentRoom = r})
             else if lightsOn ws && not (noisesHeard ws) then do
                 case r of
                     Medbay   -> do 

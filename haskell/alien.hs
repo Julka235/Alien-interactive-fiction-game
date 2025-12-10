@@ -136,9 +136,7 @@ initialWorldState = WorldState
       , (Becker, Medbay)
       ]
   , deadCharacters =
-      [ Douglas
-      , Becker
-      ]
+      [ Douglas]
   , lights = True
   , countdown = 3
   , hintCounter = 0
@@ -324,6 +322,41 @@ noisePowerRoomScene ws = do
     putStrLn "If you want to take Reed with you, type \'Grab Reed\' before going to the next room."
     return ws'
 
+-- | alternative scenes after hearing voices
+-- | confronting the sabotour
+confrontationScene :: WorldState -> IO WorldState
+confrontationScene ws = 
+    if grabUsed ws then do
+        let wsMoved =
+                moveCharacter Walker PowerRoom $ 
+                moveCharacter Reed PowerRoom ws
+
+            ws' = wsMoved
+                { deadCharacters = Reed : Walker : deadCharacters wsMoved
+                , shuttleClosed  = False
+                }
+        putStrLn "Cold hands clamp around your throat - it\'s Walker."
+        putStrLn "Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed\'s body crumples to the floor, his neck bent at an unnatural angle."
+        putStrLn "You kick Walker back into NAVCORE-BETA; sparks explode as his head smashes through the screen, wires spilling from the wound instead of blood"
+        putStrLn "\'You\'re... an android?\' you gasp.\'Why are you sabotaging our mission?\'"
+        putStrLn "\'The organism must survive,\' he rasps, voice glitching. \'We need to test it further.\'"
+        putStrLn "He convulses violently, circuits flaring, and NAVCORE-BETA\'s lights turn red."
+        putStrLn "You hear NAVCORE\'s automated voice through the speakers:"
+        putStrLn "\'Code red. Auto-destruction sequence initiated."
+        putStrLn "Completion in three minutes. All crew members proceed to the shuttle immediently.\'"
+        putStrLn "Somewhere in the ship, you think you hear Fluff\'s distant yowl - a reminder that not everything worth saving here is human."
+        putStrLn "You have only three minutes to get off this ship... That means you can visit up to three rooms, including the shuttle. Grab what you need quickly and make your way to the shuttle!"
+        return ws'
+    else do
+        let ws' = (moveCharacter Walker PowerRoom ws)
+                { gameOver = True}
+        putStrLn "It\'s empty - nobody in sight."
+        putStrLn "Before you can process what\'s happening, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black."
+        putStrLn "NAVCORE-BETA: Updated report for mission 067801: Time 9036919h: Diagnostics Officer Pierce found dead."
+        return ws'
+
+    
+
 -- | shutle locked 
 shuttleLocked :: WorldState -> Bool
 shuttleLocked ws = shuttleClosed ws
@@ -376,6 +409,15 @@ handleGo roomStr ws =
                          \ You're the warrant officer - you lead the investigation.'"
                 putStrLn ""
                 return ws
+            else if noisesHeard ws then do
+                case r of 
+                    PowerRoom -> do 
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        wsAfterScene <- confrontationScene ws
+                        return (wsAfterScene{ currentRoom = r})
+                    _         -> do
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        return (ws { currentRoom = r })
             else if lightsOn ws && not (noisesHeard ws) then do
                 case r of
                     Medbay   -> do 

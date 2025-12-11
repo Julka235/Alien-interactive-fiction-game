@@ -422,7 +422,7 @@ handleGo roomStr ws =
                          \ You're the warrant officer - you lead the investigation.'"
                 putStrLn ""
                 return ws
-            else if noisesHeard ws then do
+            else if noisesHeard ws && shuttleLocked ws then do
                 case r of 
                     PowerRoom -> do 
                         putStrLn ("You enter the " ++ show r ++ ".")

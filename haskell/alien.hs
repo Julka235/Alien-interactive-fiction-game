@@ -65,7 +65,7 @@ parseChoose _                  = Nothing
 -- | describe rooms
 describe :: RoomType -> String
 
-describe Medbay = "he beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
+describe Medbay = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
 describe LivingQuarters = "The beds are neatly made, the desks empty, and everything seems in order - except for the body lying in the middle of the room."
 describe PowerRoom = "The power room hums with machinery. Flickering panels cast shifting shadows, and the air smells faintly of burnt metal."
 describe TechnicalRoom = "The servers hum steadily. NAVCORE's screen glows softly, waiting silently for your next command."
@@ -110,6 +110,9 @@ data WorldState = WorldState
   , beckerChoice       :: Maybe ChooseType
   , forceInvestigation :: Bool
   , quartersInvestigated :: Bool
+  , blockedInvestigation :: Bool
+  , noisesHeard        :: Bool
+  , grabUsed           :: Bool
   , investigated       :: [CharacterType]
   , shuttleClosed      :: Bool
   , gameOver           :: Bool
@@ -133,15 +136,16 @@ initialWorldState = WorldState
       , (Becker, Medbay)
       ]
   , deadCharacters =
-      [ Douglas
-      , Becker
-      ]
+      [ Douglas]
   , lights = True
   , countdown = 3
   , hintCounter = 0
   , beckerChoice = Nothing
   , forceInvestigation = False
   , quartersInvestigated = False
+  , blockedInvestigation = False
+  , noisesHeard = False
+  , grabUsed = False
   , investigated = []
   , shuttleClosed = True
   , gameOver = False
@@ -150,8 +154,9 @@ initialWorldState = WorldState
 -- | game loop logic
 gameLoop :: WorldState -> IO ()
 gameLoop ws
-    | gameOver ws = putStrLn "Game Over. Thanks for playing!"
+    | gameOver ws = putStrLn "GAME OVER. Hope you join the Talume again soon."
     | otherwise = do
+        putStrLn ""
         putStr "> "
         hFlush stdout
         input <- getLine
@@ -201,6 +206,9 @@ handleCommand input ws =
 
         ["Choose", choiceStr] ->
             handleChooseCommand choiceStr ws
+        
+        ["Grab", charStr] ->
+            handleGrab charStr ws
 
         _ -> do
             putStrLn "Unknown command. Type Help."
@@ -215,7 +223,7 @@ applyChoice choice ws
         let wsChosen = ws { beckerChoice = Just choice }
             wsHandled = handleChoiceEffects choice wsChosen
             (powerMsg, wsFinal) = powerOffScene wsHandled
-            msg = "NAVCORE: Your choice has been recorded: " ++ show choice ++ ".. Command sent.\n" ++ powerMsg
+            msg = "NAVCORE: Your choice has been recorded: " ++ show choice ++ ". Command sent.\n" ++ powerMsg
         in (msg, wsFinal)
 
 handleChoiceEffects :: ChooseType -> WorldState -> WorldState
@@ -259,7 +267,110 @@ firstBodyScene ws = do
             }
     return ws'
 
--- | shutle loceked 
+-- | Walker joins the rest of the crew at living quarters
+walkerJoinsScene :: WorldState -> IO WorldState
+walkerJoinsScene ws = do
+    let ws' = moveCharacter Walker LivingQuarters ws
+    putStrLn "Before you can decide what to do next,  Walker - chief engineer - bursts in."
+    putStrLn "\'I fixed the po-\' he stops, startled by Douglas\'s dead body. \'What the hell happened here?\'"
+    putStrLn "\'The captain\'s dead,\' Reed says. \'Where have you been?\'"
+    putStrLn "\'When the lights went out, I went to the power room to restore them,\' Walker explains. \'I didn\'t expect two people to die while I was gone.\'"
+    putStrLn "Wait, did he just say two?"
+    return ws'
+
+-- | alternative scenes after leaving living quarters
+-- | if player goes to Medbay
+secondBodyScene :: WorldState -> IO WorldState
+secondBodyScene ws = do
+    let ws' = (moveCharacter Reed Medbay ws)
+          { hintCounter = hintCounter ws + 1
+          , deadCharacters = Becker : deadCharacters ws
+          , blockedInvestigation = True
+          , noisesHeard = True
+          }
+    putStrLn "Becker lies collapsed on the medbay floor - or rather, what\'s left of him does. His body has been hollowed out completely, reduced to a deflated shell as if something had crawled inside him, worn him, and then peeled him off like clothing.The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil."
+    putStrLn "A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard."
+    putStrLn "A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches."
+    putStrLn "The door swings open. Reed steps inside, pale and grim."
+    putStrLn "\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\'"
+    putStrLn "\'How do I know you\'re not the killer?\'"
+    putStrLn "\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\'"
+    if hintCounter ws' >= 2 then do
+        putStrLn "At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?"
+        putStrLn "Better not to split up when there might be another enemy aboard."
+    else return ()
+    putStrLn "If you want to take Reed with you, type \'Grab Reed\' before going to the next room."
+    return ws'
+
+-- | if player goes to another room
+noisePowerRoomScene :: WorldState -> IO WorldState
+noisePowerRoomScene ws = do
+    let ws' = (moveCharacter Reed (currentRoom ws) ws)
+          { deadCharacters = Becker : deadCharacters ws
+          , blockedInvestigation = True
+          , noisesHeard = True
+          }
+    putStrLn "A strange noise comes from the power room, followed by a scream. Your breath catches."
+    putStrLn "The door swings open. Reed steps inside, pale and grim."
+    putStrLn "\'And then there were two,\' he whispers. \'There\'s one more body to find... and the killer.\'"
+    putStrLn "\'How do I know you\'re not the killer?\'"
+    putStrLn "\'You don\'t,\' he admits. \'But I can go with you to investigate - or you can go alone.\'"
+    if hintCounter ws' >= 2 then do
+        putStrLn "At this point, you\'re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn\'t he killed you yet?"
+        putStrLn "Better not to split up when there might be another enemy aboard."
+    else return ()
+    putStrLn "If you want to take Reed with you, type \'Grab Reed\' before going to the next room."
+    return ws'
+
+-- | alternative scenes after hearing voices
+-- | confronting the sabotour
+confrontationScene :: WorldState -> IO WorldState
+confrontationScene ws = 
+    if grabUsed ws then do
+        let wsMoved =
+                moveCharacter Walker PowerRoom $ 
+                moveCharacter Reed PowerRoom ws
+
+            ws' = wsMoved
+                { deadCharacters = Reed : Walker : deadCharacters wsMoved
+                , shuttleClosed  = False
+                }
+        putStrLn "Cold hands clamp around your throat - it\'s Walker."
+        putStrLn "Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed\'s body crumples to the floor, his neck bent at an unnatural angle."
+        putStrLn "You kick Walker back into NAVCORE-BETA; sparks explode as his head smashes through the screen, wires spilling from the wound instead of blood"
+        putStrLn "\'You\'re... an android?\' you gasp.\'Why are you sabotaging our mission?\'"
+        putStrLn "\'The organism must survive,\' he rasps, voice glitching. \'We need to test it further.\'"
+        putStrLn "He convulses violently, circuits flaring, and NAVCORE-BETA\'s lights turn red."
+        putStrLn "You hear NAVCORE\'s automated voice through the speakers:"
+        putStrLn "\'Code red. Auto-destruction sequence initiated."
+        putStrLn "Completion in three minutes. All crew members proceed to the shuttle immediently.\'"
+        putStrLn "Somewhere in the ship, you think you hear Fluff\'s distant yowl - a reminder that not everything worth saving here is human."
+        putStrLn "You have only three minutes to get off this ship... That means you can visit up to three rooms, including the shuttle. Grab what you need quickly and make your way to the shuttle!"
+        return ws'
+    else do
+        let ws' = (moveCharacter Walker PowerRoom ws)
+                { gameOver = True}
+        putStrLn "It\'s empty - nobody in sight."
+        putStrLn "Before you can process what\'s happening, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black."
+        putStrLn "NAVCORE-BETA: Updated report for mission 067801: Time 9036919h: Diagnostics Officer Pierce found dead."
+        return ws'
+
+-- | ignoring the noises
+ignoringNoisesScene :: WorldState -> IO WorldState
+ignoringNoisesScene ws = do
+    let ws' = ws { deadCharacters = Reed : deadCharacters ws}
+    if grabUsed ws then do
+        putStrLn "\'Where are you going?\' Reed asks, confused, from behind your back."
+        putStrLn "You ignore him. All you can think about is running from the noise — not toward it."
+        putStrLn "As you wish,\' Reed scolds as he starts walking back toward the power room. \'I\'ll face it alone.\'"
+    else do
+        putStrLn "Reed decided not to follow you after you ignored him. He probably went to face the noise alone."
+    putStrLn "Then, before you can do or think anything else, the spaceship alarm goes off. You hear NAVCORE automated voice through the speakers:"
+    putStrLn "Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently."
+    return ws'
+
+
+-- | shutle locked 
 shuttleLocked :: WorldState -> Bool
 shuttleLocked ws = shuttleClosed ws
 
@@ -278,6 +389,15 @@ alreadyInRoom r ws = currentRoom ws == r
 -- | are forcing player to investigate
 mustInvestigate :: WorldState -> Bool
 mustInvestigate ws = forceInvestigation ws
+
+-- | move character to different room
+moveCharacter :: CharacterType -> RoomType -> WorldState -> WorldState
+moveCharacter c newRoom ws =
+    ws { roomCharacters = map update (roomCharacters ws) }
+  where
+    update (x, oldRoom)
+        | x == c    = (x, newRoom)
+        | otherwise = (x, oldRoom)
 
 -- | main Go logic
 handleGo :: String -> WorldState -> IO WorldState
@@ -302,6 +422,31 @@ handleGo roomStr ws =
                          \ You're the warrant officer - you lead the investigation.'"
                 putStrLn ""
                 return ws
+            else if noisesHeard ws && shuttleLocked ws then do
+                case r of 
+                    PowerRoom -> do 
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        wsAfterScene <- confrontationScene ws
+                        return (wsAfterScene{ currentRoom = r})
+                    _         -> do
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        wsAfterScene <- ignoringNoisesScene ws
+                        return (wsAfterScene{ currentRoom = r})
+            else if lightsOn ws && not (noisesHeard ws) then do
+                case r of
+                    Medbay   -> do 
+                        putStrLn "You enter the Medbay, noticing the isolation space."
+                        wsAfterScene <- secondBodyScene ws
+                        return (wsAfterScene{ currentRoom = r})
+                    Shuttle  -> do 
+                        return (ws { currentRoom = r })
+                    PowerRoom -> do 
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        return (ws { currentRoom = r })
+                    _        -> do 
+                        putStrLn ("You enter the " ++ show r ++ ".")
+                        wsAfterScene <- noisePowerRoomScene ws
+                        return (wsAfterScene{ currentRoom = r})
             else do
                 case r of
                     Medbay   -> putStrLn "You enter the Medbay, noticing the isolation space."
@@ -321,11 +466,28 @@ handleGo roomStr ws =
 
                 return ws'
 
--- | TODO
+-- | take logic
 handleTake :: String -> WorldState -> IO WorldState
-handleTake thingStr ws = do
-    putStrLn "Taking not implemented yet."
-    return ws
+handleTake thingStr ws = 
+    case parseThing thingStr of
+        Nothing -> do
+            putStrLn "There is no such thing to take."
+            return ws
+        Just c ->
+            let inRoom = case lookup c (roomThings ws) of
+                            Just room -> room == currentRoom ws
+                            Nothing -> False
+                already = c `elem` inventory ws
+            in if not inRoom then do
+                    putStrLn "It is not here."
+                    return ws
+                else if already then do
+                    putStrLn "You\'re already holding it!"
+                    return ws
+                else do
+                    let ws' = ws { inventory = c : inventory ws}
+                    putStrLn "Taken."
+                    return ws'
 
 -- | investigation logic
 handleInvestigate :: String -> WorldState -> IO WorldState
@@ -348,6 +510,9 @@ handleInvestigate charStr ws =
                else if not alive then do
                    putStrLn "There's no point investigating the dead."
                    return ws
+               else if blockedInvestigation ws then do
+                   putStrLn "There\'s no time to waste on talking now."
+                   return ws
                else if already then do
                    putStrLn "'I have nothing more to say.' is all they say."
                    return ws
@@ -356,12 +521,39 @@ handleInvestigate charStr ws =
                                 , forceInvestigation = if c == Kendle then False else forceInvestigation ws
                                 }
                    case c of
-                       Kendle -> putStrLn (investigationResponse Kendle (fromMaybe MedBay (beckerChoice ws')))
-                       Reed    -> putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
-                       Walker  -> putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
-                       _       -> putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
+                       Kendle -> do
+                           putStrLn (investigationResponse Kendle (fromMaybe MedBay (beckerChoice ws')))
+                           walkerJoinsScene ws'
+                       Reed -> do
+                           putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
+                           return ws'
+                       Walker -> do
+                           putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
+                           return ws'
+                       _ -> do
+                           putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
+                           return ws'
 
-                   return ws'
+handleGrab :: String -> WorldState -> IO WorldState
+handleGrab charStr ws =
+    case parseCharacter charStr of
+        Nothing -> do
+            putStrLn "You cannot grab them." 
+            return ws
+        Just c ->
+            if not (noisesHeard ws) then do
+                putStrLn "You don\'t need to grab anyone." 
+                return ws
+            else if c /= Reed then do 
+                putStrLn "You cannot grab them." 
+                return ws
+            else if grabUsed ws then do 
+                putStrLn "Reed is already with you." 
+                return ws
+            else do
+                let ws' = ws {grabUsed = True}
+                putStrLn "Reed will go with you." 
+                return ws'
 
 -- help
 printHelp :: IO ()
@@ -408,6 +600,7 @@ printRooms = do
 main :: IO ()
 main = do
     putStrLn "Do you want to play a game?"
+    putStrLn "[Press Enter to start.]"
     _ <- getLine
     putStrLn "You are the Diagnostics Officer aboard the spaceship Talume, on a mission to investigate a newly discovered life form. But something  has gone horribly wrong - and the alien creature may not be the only danger lurking in the ship's dark corridors..."
     putStrLn "But before you continue your journey:"

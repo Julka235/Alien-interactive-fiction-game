@@ -403,9 +403,9 @@ enterShuttleScene ws = do
     if holdingGun && holdingFluff then do
         putStrLn "You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule."
         putStrLn "Fluff hisses at the food cupboard. Your heart race - you realize the alien has made it abroad."
-        putStrLn "Quickly, you grab your gun and keep it ready"
+        putStr "Quickly, you grab your gun and keep it ready."
         putStrLn "When the alien lunges, you fire, blasting all the bullets."
-        putStrLn "Finally, you disarm yourself and settle into stasis, Fluff safe by your side."
+        putStr "Finally, you disarm yourself and settle into stasis, Fluff safe by your side."
         return (ws{ gameOver = Just Win })
     else if holdingFluff then do
         putStrLn "You update the mission report, then prepare for stasis. As you settle into the capsule, exhaustion takes over."

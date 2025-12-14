@@ -27,6 +27,12 @@ data CharacterType
     | Reed
     deriving (Enum, Eq, Show)
 
+-- | game result
+data GameResult
+    = Defeat
+    | Win
+    deriving (Eq, Show)
+
 -- | valid choose
 data ChooseType
     = MedBay
@@ -105,7 +111,7 @@ data WorldState = WorldState
   , roomCharacters     :: [(CharacterType, RoomType)]
   , deadCharacters     :: [CharacterType]
   , lights             :: Bool
-  , countdown          :: Int
+  , countdown          :: Maybe Int
   , hintCounter        :: Int
   , beckerChoice       :: Maybe ChooseType
   , forceInvestigation :: Bool
@@ -115,7 +121,7 @@ data WorldState = WorldState
   , grabUsed           :: Bool
   , investigated       :: [CharacterType]
   , shuttleClosed      :: Bool
-  , gameOver           :: Bool
+  , gameOver           :: Maybe GameResult
   }
 
 -- | starting world state
@@ -136,9 +142,9 @@ initialWorldState = WorldState
       , (Becker, Medbay)
       ]
   , deadCharacters =
-      [ Douglas]
+      [Douglas]
   , lights = True
-  , countdown = 3
+  , countdown = Nothing
   , hintCounter = 0
   , beckerChoice = Nothing
   , forceInvestigation = False
@@ -148,13 +154,18 @@ initialWorldState = WorldState
   , grabUsed = False
   , investigated = []
   , shuttleClosed = True
-  , gameOver = False
+  , gameOver = Nothing
   }
 
 -- | game loop logic
 gameLoop :: WorldState -> IO ()
 gameLoop ws
-    | gameOver ws = putStrLn "GAME OVER. Hope you join the Talume again soon."
+    | gameOver ws == Just Defeat = do
+        putStrLn ""
+        putStrLn "GAME OVER. Hope you join the Talume again soon."
+    | gameOver ws == Just Win = do
+        putStrLn ""
+        putStrLn "Congrats! You and Fluff have survived the alien attack Hope to see you on the next mission, Officer."
     | otherwise = do
         putStrLn ""
         putStr "> "
@@ -168,7 +179,7 @@ handleCommand :: String -> WorldState -> IO WorldState
 handleCommand input ws =
     case words input of
         ["Exit"] ->
-            return ws { gameOver = True }
+            return ws { gameOver = Just Defeat }
 
         ["Help"] -> do
             printHelp
@@ -206,7 +217,7 @@ handleCommand input ws =
 
         ["Choose", choiceStr] ->
             handleChooseCommand choiceStr ws
-        
+
         ["Grab", charStr] ->
             handleGrab charStr ws
 
@@ -214,7 +225,7 @@ handleCommand input ws =
             putStrLn "Unknown command. Type Help."
             return ws
 
--- | display message for choice what to do with Becker 
+-- | display message for choice what to do with Becker
 applyChoice :: ChooseType -> WorldState -> (String, WorldState)
 applyChoice choice ws
     | beckerChoice ws /= Nothing =
@@ -325,15 +336,16 @@ noisePowerRoomScene ws = do
 -- | alternative scenes after hearing voices
 -- | confronting the sabotour
 confrontationScene :: WorldState -> IO WorldState
-confrontationScene ws = 
+confrontationScene ws =
     if grabUsed ws then do
         let wsMoved =
-                moveCharacter Walker PowerRoom $ 
+                moveCharacter Walker PowerRoom $
                 moveCharacter Reed PowerRoom ws
 
             ws' = wsMoved
                 { deadCharacters = Reed : Walker : deadCharacters wsMoved
                 , shuttleClosed  = False
+                , countdown      = Just 3
                 }
         putStrLn "Cold hands clamp around your throat - it\'s Walker."
         putStrLn "Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed\'s body crumples to the floor, his neck bent at an unnatural angle."
@@ -349,7 +361,7 @@ confrontationScene ws =
         return ws'
     else do
         let ws' = (moveCharacter Walker PowerRoom ws)
-                { gameOver = True}
+                { gameOver = Just Defeat}
         putStrLn "It\'s empty - nobody in sight."
         putStrLn "Before you can process what\'s happening, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black."
         putStrLn "NAVCORE-BETA: Updated report for mission 067801: Time 9036919h: Diagnostics Officer Pierce found dead."
@@ -358,7 +370,8 @@ confrontationScene ws =
 -- | ignoring the noises
 ignoringNoisesScene :: WorldState -> IO WorldState
 ignoringNoisesScene ws = do
-    let ws' = ws { deadCharacters = Reed : deadCharacters ws}
+    let ws' = ws { deadCharacters = Reed : deadCharacters ws
+                   , countdown    = Just 3}
     if grabUsed ws then do
         putStrLn "\'Where are you going?\' Reed asks, confused, from behind your back."
         putStrLn "You ignore him. All you can think about is running from the noise — not toward it."
@@ -366,11 +379,46 @@ ignoringNoisesScene ws = do
     else do
         putStrLn "Reed decided not to follow you after you ignored him. He probably went to face the noise alone."
     putStrLn "Then, before you can do or think anything else, the spaceship alarm goes off. You hear NAVCORE automated voice through the speakers:"
-    putStrLn "Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently."
+    putStrLn "'Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently.'"
+    putStr "This means you can visit up to 3 rooms now..."
     return ws'
 
 
--- | shutle locked 
+-- | spaceship auto destruction triggered
+autoDestructionScene :: WorldState -> IO WorldState
+autoDestructionScene ws = do
+    putStrLn "You run out of time."
+    putStrLn "NAVCORE's automated voice counts down: 'Auto-destruction begins in 3... 2... 1...'."
+    putStrLn "Silence follows. Then everything ends."
+    return (ws{ gameOver = Just Defeat })
+
+-- | shuttle endings
+enterShuttleScene :: WorldState -> IO WorldState
+enterShuttleScene ws = do
+    putStrLn "You reach the shuttle just in time and take off."
+
+    let holdingGun   = Gun `elem` inventory ws
+        holdingFluff = Fluff `elem` inventory ws
+
+    if holdingGun && holdingFluff then do
+        putStrLn "You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule."
+        putStrLn "Fluff hisses at the food cupboard. Your heart race - you realize the alien has made it abroad."
+        putStrLn "Quickly, you grab your gun and keep it ready"
+        putStrLn "When the alien lunges, you fire, blasting all the bullets."
+        putStrLn "Finally, you disarm yourself and settle into stasis, Fluff safe by your side."
+        return (ws{ gameOver = Just Win })
+    else if holdingFluff then do
+        putStrLn "You update the mission report, then prepare for stasis. As you settle into the capsule, exhaustion takes over."
+        putStrLn "Fluff suddenly hisses at the food cupboard. Your stomach drops. The alien is here - with you. Cold sweat runs down your face as you realize you have nothing to defend yourself."
+        putStrLn "The cupboard bursts open. The creature lunges, sinking its jaws into your neck before you can even scream."
+        return (ws{ gameOver = Just Defeat })
+    else do
+        putStrLn "You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule and close your eyes."
+        putStrLn "You never see it coming - razor-sharp claws tear through your stomach. The alien made it aboard, hidden where you didn\'t notice. Before you can even scream, your throat is ripped open."
+        return (ws{ gameOver = Just Defeat })
+
+
+-- | shutle locked
 shuttleLocked :: WorldState -> Bool
 shuttleLocked ws = shuttleClosed ws
 
@@ -407,68 +455,89 @@ handleGo roomStr ws =
             putStrLn "No such room."
             return ws
         Just r -> do
-            if r == Shuttle && shuttleLocked ws then do
-                putStrLn "Cannot enter the shuttle. Only available in case of code red."
+            if alreadyInRoom r ws then do
+                putStrLn "You are already here."
                 return ws
+
             else if waitingForChoice ws then do
                 putStrLn "NAVCORE is waiting for your decision. You can't leave yet."
                 return ws
-            else if alreadyInRoom r ws then do
-                putStrLn "You are already here."
-                return ws
+
             else if mustInvestigate ws then do
                 putStrLn "'Where the hell are you going, Pierce?' Reed snaps, grabbing your arm. \
                          \ 'You're not leaving until we figure out what happened here. \
                          \ You're the warrant officer - you lead the investigation.'"
                 putStrLn ""
                 return ws
-            else if noisesHeard ws && shuttleLocked ws then do
-                case r of 
-                    PowerRoom -> do 
-                        putStrLn ("You enter the " ++ show r ++ ".")
-                        wsAfterScene <- confrontationScene ws
-                        return (wsAfterScene{ currentRoom = r})
-                    _         -> do
-                        putStrLn ("You enter the " ++ show r ++ ".")
-                        wsAfterScene <- ignoringNoisesScene ws
-                        return (wsAfterScene{ currentRoom = r})
-            else if lightsOn ws && not (noisesHeard ws) then do
-                case r of
-                    Medbay   -> do 
-                        putStrLn "You enter the Medbay, noticing the isolation space."
-                        wsAfterScene <- secondBodyScene ws
-                        return (wsAfterScene{ currentRoom = r})
-                    Shuttle  -> do 
-                        return (ws { currentRoom = r })
-                    PowerRoom -> do 
-                        putStrLn ("You enter the " ++ show r ++ ".")
-                        return (ws { currentRoom = r })
-                    _        -> do 
-                        putStrLn ("You enter the " ++ show r ++ ".")
-                        wsAfterScene <- noisePowerRoomScene ws
-                        return (wsAfterScene{ currentRoom = r})
+
+            else if r == Shuttle && shuttleLocked ws then do
+                if countdown ws == Nothing then do
+                     putStrLn "Cannot enter the shuttle. Only available in case of code red."
+                     return ws
+                else do
+                     putStrLn "The shuttle doors are closed. They shouldn't be - but the saboteur you failed to catch must have locked them. You remember the capitan also had the key. You run to headquarters and grab it. The whole ordeal takes over two minutes though..."
+                     let ws' = ws { countdown = fmap (\x -> x - 2) (countdown ws) }
+                     if maybe False (< 0) (countdown ws') then do
+                        putStrLn "Unfortunately, these 2 minutes were to much."
+                        wsAfterScene <- autoDestructionScene ws'
+                        return (wsAfterScene {shuttleClosed = False, currentRoom = Shuttle})
+                     else do
+                        putStrLn ""
+                        wsAfterScene <- enterShuttleScene ws'
+                        return (wsAfterScene {shuttleClosed = False, currentRoom = Shuttle})
+
             else do
                 case r of
-                    Medbay   -> putStrLn "You enter the Medbay, noticing the isolation space."
-                    Shuttle  -> return ()  -- no message
-                    _        -> putStrLn ("You enter the " ++ show r ++ ".")
+                    Medbay  -> if not (noisesHeard ws) then
+                                putStrLn "You enter the Medbay, noticing the isolation space."
+                               else
+                                putStrLn ("You enter the " ++ show r ++ ".")
+                    Shuttle -> return ()
+                    _       -> putStrLn ("You enter the " ++ show r ++ ".")
 
-                -- handle lights off scenario
-                ws' <- if not (lightsOn ws) then
-                           case r of
-                               LivingQuarters -> do
-                                   wsAfterScene <- firstBodyScene ws
-                                   return (wsAfterScene { currentRoom = r })
-                               _ -> do
-                                   putStrLn "You almost trip over something you can’t see. Everything is still pitch black."
-                                   return (ws { currentRoom = r })
-                       else return (ws { currentRoom = r })
-
-                return ws'
+                if not (lightsOn ws) then
+                    case r of
+                           LivingQuarters -> do
+                                wsAfterScene <- firstBodyScene ws
+                                return (wsAfterScene { currentRoom = r })
+                           _ -> do
+                                putStrLn "You almost trip over something you can’t see. Everything is still pitch black."
+                                return (ws { currentRoom = r })
+                else if not (noisesHeard ws) then do
+                    case r of
+                           Medbay -> do
+                                wsAfterScene <- secondBodyScene ws
+                                return (wsAfterScene{ currentRoom = r})
+                           PowerRoom -> do
+                                return (ws { currentRoom = r })
+                           _ -> do
+                                wsAfterScene <- noisePowerRoomScene ws
+                                return (wsAfterScene{ currentRoom = r})
+                else if countdown ws == Nothing then
+                    case r of
+                           PowerRoom -> do
+                                wsAfterScene <- confrontationScene ws
+                                return (wsAfterScene{ currentRoom = r})
+                           _ -> do
+                                wsAfterScene <- ignoringNoisesScene ws
+                                return (wsAfterScene{ currentRoom = r})
+                else do
+                    let ws' = ws{ countdown = fmap (\x -> x - 1) (countdown ws) }
+                    case r of
+                           Shuttle -> do
+                                wsAfterScene <- enterShuttleScene ws'
+                                return (wsAfterScene{ currentRoom = r})
+                           _ -> do
+                                if fromMaybe 0 (countdown ws') <= 0 then do
+                                    wsAfterScene <- autoDestructionScene ws'
+                                    return wsAfterScene
+                                else do
+                                    putStrLn ("Player can go to max 3 rooms, with shuttle space being the last. Current counter: " ++ show (fromMaybe 0 (countdown ws')) ++ ".")
+                                    return (ws'{ currentRoom = r })
 
 -- | take logic
 handleTake :: String -> WorldState -> IO WorldState
-handleTake thingStr ws = 
+handleTake thingStr ws =
     case parseThing thingStr of
         Nothing -> do
             putStrLn "There is no such thing to take."
@@ -529,7 +598,7 @@ handleInvestigate charStr ws =
                            return ws'
                        Walker -> do
                            putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
-                           return ws'
+                           return (ws'{ hintCounter = hintCounter ws' + 1 })
                        _ -> do
                            putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
                            return ws'
@@ -538,21 +607,21 @@ handleGrab :: String -> WorldState -> IO WorldState
 handleGrab charStr ws =
     case parseCharacter charStr of
         Nothing -> do
-            putStrLn "You cannot grab them." 
+            putStrLn "You cannot grab them."
             return ws
         Just c ->
             if not (noisesHeard ws) then do
-                putStrLn "You don\'t need to grab anyone." 
+                putStrLn "You don\'t need to grab anyone."
                 return ws
-            else if c /= Reed then do 
-                putStrLn "You cannot grab them." 
+            else if c /= Reed then do
+                putStrLn "You cannot grab them."
                 return ws
-            else if grabUsed ws then do 
-                putStrLn "Reed is already with you." 
+            else if grabUsed ws then do
+                putStrLn "Reed is already with you."
                 return ws
             else do
                 let ws' = ws {grabUsed = True}
-                putStrLn "Reed will go with you." 
+                putStrLn "Reed will go with you."
                 return ws'
 
 -- help

@@ -561,47 +561,51 @@ handleTake thingStr ws =
 -- | investigation logic
 handleInvestigate :: String -> WorldState -> IO WorldState
 handleInvestigate charStr ws =
-    case parseCharacter charStr of
-        Nothing -> do
-            putStrLn $ "There is no such character as " ++ charStr ++ "."
-            putStrLn "To see characters type 'Crew'."
-            return ws
+    if charStr == "Fluff" then do
+        putStrLn "You can't talk to animals."
+        return ws
+    else
+        case parseCharacter charStr of
+            Nothing -> do
+                putStrLn $ "There is no such character as " ++ charStr ++ "."
+                putStrLn "To see characters type 'Crew'."
+                return ws
 
-        Just c ->
-            let inRoom = case lookup c (roomCharacters ws) of
-                            Just room -> room == currentRoom ws
-                            Nothing -> False
-                alive = not (c `elem` deadCharacters ws)
-                already = c `elem` investigated ws
-            in if not inRoom then do
-                   putStrLn "You can't investigate them - they're not in the room with you."
-                   return ws
-               else if not alive then do
-                   putStrLn "There's no point investigating the dead."
-                   return ws
-               else if blockedInvestigation ws then do
-                   putStrLn "There\'s no time to waste on talking now."
-                   return ws
-               else if already then do
-                   putStrLn "'I have nothing more to say.' is all they say."
-                   return ws
-               else do
-                   let ws' = ws { investigated = c : investigated ws
-                                , forceInvestigation = if c == Kendle then False else forceInvestigation ws
-                                }
-                   case c of
-                       Kendle -> do
-                           putStrLn (investigationResponse Kendle (fromMaybe MedBay (beckerChoice ws')))
-                           walkerJoinsScene ws'
-                       Reed -> do
-                           putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
-                           return ws'
-                       Walker -> do
-                           putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
-                           return (ws'{ hintCounter = hintCounter ws' + 1 })
-                       _ -> do
-                           putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
-                           return ws'
+            Just c ->
+                let inRoom = case lookup c (roomCharacters ws) of
+                                Just room -> room == currentRoom ws
+                                Nothing -> False
+                    alive = not (c `elem` deadCharacters ws)
+                    already = c `elem` investigated ws
+                in if not inRoom then do
+                    putStrLn "You can't investigate them - they're not in the room with you."
+                    return ws
+                else if not alive then do
+                    putStrLn "There's no point investigating the dead."
+                    return ws
+                else if blockedInvestigation ws then do
+                    putStrLn "There\'s no time to waste on talking now."
+                    return ws
+                else if already then do
+                    putStrLn "'I have nothing more to say.' is all they say."
+                    return ws
+                else do
+                    let ws' = ws { investigated = c : investigated ws
+                                    , forceInvestigation = if c == Kendle then False else forceInvestigation ws
+                                    }
+                    case c of
+                        Kendle -> do
+                            putStrLn (investigationResponse Kendle (fromMaybe MedBay (beckerChoice ws')))
+                            walkerJoinsScene ws'
+                        Reed -> do
+                            putStrLn (investigationResponse Reed (fromMaybe MedBay (beckerChoice ws')))
+                            return ws'
+                        Walker -> do
+                            putStrLn (investigationResponse Walker (fromMaybe MedBay (beckerChoice ws')))
+                            return (ws'{ hintCounter = hintCounter ws' + 1 })
+                        _ -> do
+                            putStrLn $ "You look at " ++ show c ++ ", but there is nothing special to note."
+                            return ws'
 
 handleGrab :: String -> WorldState -> IO WorldState
 handleGrab charStr ws =

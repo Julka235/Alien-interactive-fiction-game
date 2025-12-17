@@ -22,13 +22,13 @@ NAVCORE: Science Officer Reed has re-entered the Talume carrying the sick and un
 
 Type either 'Choose MedBay' or 'Choose Isolation'.
 
-> Choose Isolation
+-> Choose Isolation
 NAVCORE: Your choice has been recorded: Isolation. Command sent.
 You stretch and rise from the console, planning to look for the ship's cat, Fluff.
 As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it’s cut short.
 You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.
 
-> Go LivingQuarters
+-> Go LivingQuarters
 You enter the LivingQuarters.
 You step into the living quarters. The lights flicker back on, blinding you for a moment.
 A scream cuts through the silence - Kendle's. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It's Douglas - your captain and friend.
@@ -36,10 +36,10 @@ Only Kendle and Reed are here. With the captain dead and Becker still unconsciou
 Reed turns to you, his voice tight. 'You're the one in command now, Pierce. What do we do?'
 Do you look around the room first, or investigate one of the crew members?
 
-> Look
+-> Look
 The blood is still spreading across the floor. A strange black substance mixes with it in the wounds. They don’t look human-made — jagged and mangled, as if something with a jaw full of sharp teeth tore them.
 
-> Investigate Kendle
+-> Investigate Kendle
 'You were the first here, right, Kendle? Did you notice anything?'
 'Not much,' she says, voice trembling. 'I was walking down the corridor when the power went out. Then the cat ran between my legs, yowling and howling, just before the scream. And then...' She glances tearfully at Douglas’ body and shivers. 'I don’t know who or what could have done this.'
 'Fluff’s instincts were always sharp,' you think to yourself. 'If he sensed danger before anyone else... maybe he’s seen what we haven’t.'
@@ -49,12 +49,12 @@ Before you can decide what to do next,  Walker - chief engineer - bursts in.
 'When the lights went out, I went to the power room to restore them,' Walker explains. 'I didn't expect two people to die while I was gone.'
 Wait, did he just say two?
 
-> Investigate Walker
+-> Investigate Walker
 'I was fixing the power after it went out,' he says. 'Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere. So I went to check the isolation, and...'
 'Did Becker leave quarantine?'
 'Not exactly,' Walker replies. 'He's still in isolation – but he's dead, Pierce. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn't a malfunction. Someone on the crew must have unlocked the door.'
 
-> Go Medbay
+-> Go Medbay
 You enter the Medbay, noticing the isolation space.
 Becker lies collapsed on the medbay floor - or rather, what's left of him does. His body has been hollowed out completely, reduced to a deflated shell as if something had crawled inside him, worn him, and then peeled him off like clothing.The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.
 A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.
@@ -67,13 +67,13 @@ At this point, you're certain someone on the crew is working with the alien. It 
 Better not to split up when there might be another enemy aboard.
 If you want to take Reed with you, type 'Grab Reed' before going to the next room.
 
-> Take Fluff
+-> Take Fluff
 Taken.
 
-> Grab Reed
+-> Grab Reed
 Reed will go with you.
 
-> Go PowerRoom
+-> Go PowerRoom
 You enter the PowerRoom.
 Cold hands clamp around your throat - it's Walker.
 Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed's body crumples to the floor, his neck bent at an unnatural angle.
@@ -87,17 +87,17 @@ Completion in three minutes. All crew members proceed to the shuttle immediently
 Somewhere in the ship, you think you hear Fluff's distant yowl - a reminder that not everything worth saving here is human.
 You have only three minutes to get off this ship... That means you can visit up to three rooms, including the shuttle. Grab what you need quickly and make your way to the shuttle!
 
-> Go StorageBay
+-> Go StorageBay
 You enter the StorageBay.
 Player can go to max 3 rooms, with shuttle space being the last. Current counter: 2.
 
-> Look
+-> Look
 Rows of shelves line the room, scattered with guns catching the dim light, silent and waiting for you to grab one.
 
-> Take Gun
+-> Take Gun
 Taken.
 
-> Go Shuttle
+-> Go Shuttle
 You reach the shuttle just in time and take off.
 You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule.
 Fluff hisses at the food cupboard. Your heart race - you realize the alien has made it abroad.

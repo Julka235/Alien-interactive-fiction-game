@@ -162,7 +162,7 @@ Object subclass: Item [
 
 
 Object subclass: Game [
-    | isGameOver rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation noisesHeard beckerChoice countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
+    | isGameOver rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation noisesHeard beckerChoice hintCounter countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
 
 
     introductionText [
@@ -188,22 +188,13 @@ Object subclass: Game [
         )
     ]
 
-    afterBeckerChoiceScene: choice [
-       ^ {
-           ''.
-           ('NAVCORE: Your choice has been recorded: ', choice, '. Command sent.').
-           'You stretch and rise from the console, planning to look for the ship''s cat, Fluff.'.
-           'As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it''s cut short.'.  "<- TUTAJ BRAKOWAŁO KROPKI"
-           'You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.'
-       }
-   ]
-
     init [
         isGameOver := false.
         lightsOn := true.
         forceInvestigation := false.
         noisesHeard := false.
         beckerChoice := nil.
+        hintCounter := 0.
         countdown := nil.
 
         rooms := Dictionary new.
@@ -405,10 +396,6 @@ Object subclass: Game [
         self printLines: self instructionsText.
     ]
 
-    printBeckerAfterChoice [
-        self printLines: (self afterBeckerChoiceScene: beckerChoice).
-    ]
-
     readCommand [
         Transcript show: '> '.
         ^ FileStream stdin nextLine
@@ -436,9 +423,25 @@ Object subclass: Game [
             beckerChoice := self readCommand.
         ].
 
-        self printLines: (self afterBeckerChoiceScene: beckerChoice).
-        lightsOn := false.
+        (beckerChoice = 'isolation')
+            ifTrue: [hintCounter := hintCounter + 1].
+
+        self printLines: {
+            ''.
+           'NAVCORE: Your choice has been recorded: ', beckerChoice, '. Command sent.'
+        }.
+
+        self powerOffScene.
     ]
+
+    powerOffScene [
+        self printLines: #(
+           'You stretch and rise from the console, planning to look for the ship''s cat, Fluff.'
+           'As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it''s cut short.'
+           'You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.'
+       ).
+       lightsOn := false.
+   ]
 
     run [
         | cmd keyPressed |

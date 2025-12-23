@@ -55,6 +55,10 @@ Object subclass: CrewMember [
         isAlive := aBoolean.
     ]
 
+    CrewMember >> investigationLine: aString [
+    investigationLine := aString.
+    ]
+
     initName: aName location: aRoom canBeGrabbed: grabFlag description: aDescription [
         name := aName.
         location := aRoom.
@@ -87,7 +91,7 @@ Object subclass: CrewMember [
     ]
 
     investigate: player [
-        | playerLocation |
+        | playerLocation|
         playerLocation := player location.
 
         (location = playerLocation) ifFalse: [
@@ -98,12 +102,12 @@ Object subclass: CrewMember [
         (isAlive) ifFalse: [
             Transcript show: 'There''s no point investigating the dead.'; cr.
             ^ self.
-        ]
+        ].
 
         investigated ifTrue: [
             Transcript show: '> ', name, ': I have nothing more to say.'; cr.
         ] ifFalse: [
-            Transcript show: investigationLine; cr.
+            investigationLine do: [:line | Transcript show: line; cr].
             investigated := true.
         ].
     ]
@@ -271,6 +275,25 @@ Object subclass: Game [
                 description: 'executive officer.'.
         crew at: 'Reed' put: reed; at: 'Kendle' put: kendle; at: 'Walker' put: walker; at: 'Douglas' put: douglas; at: 'Becker' put: becker.
 
+        reed investigationLine: #(
+            'What were you doing just now, Reed?'
+            'I was running an analysis of Becker''s blood, he says. Trying to figure out how to help him... his condition isn''t improving.'
+            'Did you find anything?'
+            'Not exactly, Reed admits. But something''s wrong. His blood is more acidic than normal, and it''s not clotting at all.'
+        ).
+
+        kendle investigationLine: #(
+            'You were the first here, right, Kendle? Did you notice anything?'
+            'Not much, she says, voice trembling. The cat ran between my legs, yowling just before the scream.'
+            'I don’t know who or what could have done this.'
+        ).
+
+        walker investigationLine: #(
+            'I was fixing the power after it went out.'
+            'Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere.'
+            'I didn''t want to investigate without you.'
+        ).
+
         items := Dictionary new.
         fluff := Item name: 'Fluff' location: medbay.
         gun := Item name: 'Gun' location: storageBay.
@@ -375,7 +398,7 @@ Object subclass: Game [
         ].
     ]
 
-    performInvestgation: crewMemberName player: aPlayer [
+    performInvestigation: crewMemberName player: aPlayer [
         | crewMember |
         crewMember := crew at: crewMemberName ifAbsent: [
             Transcript show: 'Person not found. Use uppercase.'; cr. ^ self
@@ -507,7 +530,7 @@ Object subclass: Game [
 
             ((cmd indexOfSubCollection: 'investigate' startingAt: 1) > 0) ifTrue: [
                cName := (cmd copyFrom: 13 to: cmd size).
-               self performInvestgation: cName player: player.
+               self performInvestigation: cName player: player.
                isUnknown := false
             ].
 

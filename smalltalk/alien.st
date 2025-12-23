@@ -51,6 +51,10 @@ Object subclass: CrewMember [
         ^super new initName: aName location: aRoom canBeGrabbed: grabFlag description: aDescription
     ]
 
+    CrewMember >> isAlive: aBoolean [
+        isAlive := aBoolean.
+    ]
+
     initName: aName location: aRoom canBeGrabbed: grabFlag description: aDescription [
         name := aName.
         location := aRoom.
@@ -90,6 +94,11 @@ Object subclass: CrewMember [
             Transcript show: 'You cant investigate, because ', name, ' is not here'; cr.
             ^ self.
         ].
+
+        (isAlive) ifFalse: [
+            Transcript show: 'There''s no point investigating the dead.'; cr.
+            ^ self.
+        ]
 
         investigated ifTrue: [
             Transcript show: '> ', name, ': I have nothing more to say.'; cr.
@@ -318,9 +327,7 @@ Object subclass: Game [
             player moveTo: targetRoom.
             targetRoomName = 'LivingQuarters'
                 ifTrue: [
-                    lightsOn := true.
-                    Transcript show: 'Scene: First Body Found'; cr.
-                    forceInvestigation := true.
+                    self firstBodyScene.
                 ]
                 ifFalse: [ Transcript show: 'You almost trip over something you cant see. Everything is still pitch black.'; cr. ].
         ].
@@ -442,6 +449,20 @@ Object subclass: Game [
        ).
        lightsOn := false.
    ]
+
+   firstBodyScene [
+        self printLines: {
+            'You step into the living quarters. The lights flicker back on, blinding you for a moment.'.
+            'A scream cuts through the silence - Kendle''s. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It''s Douglas - your captain and friend.'.
+            'Only Kendle and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must''ve restored the power.'.
+            'Reed turns to you, his voice tight. ''You''re the one in command now, Pierce. What do we do?'''.
+            'Do you look around the room first, or investigate one of the crew members?'
+        }.
+        lightsOn := true.
+        forceInvestigation := true.
+        douglas isAlive: false.
+    ]
+
 
     run [
         | cmd keyPressed |

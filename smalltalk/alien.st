@@ -188,23 +188,6 @@ Object subclass: Game [
         )
     ]
 
-    beckerChoiceScene [
-        ^ #(
-            ''
-            'NAVCORE, main spaceship''s computer hums softly when it prints the response on the screen.'
-            'NAVCORE: Hello, Diagnostics Officer Pierce. Here is the report of Mission 067801'
-            '"""'
-            'Corporate command authorized the spaceship Talume to investigate a possible life form on planet 26-Draconis. Talume landed on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed left the ship to investigate. After 6 hours, Talume lost contact with Executive Officer Becker. Science Officer Reed reported unsuccessful search attempts.'
-            '"""'
-            'NAVCORE: Anything else I can do for you, Officer?'
-            'Before you can respond, the main console clears. A new line appears.'
-            'NAVCORE: Science Officer Reed has re-entered the Talume carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?'
-            ''
-            'Type either "medbay" or "isolation".'
-            ''
-        )
-    ]
-
     afterBeckerChoiceScene: choice [
        ^ {
            ''.
@@ -422,10 +405,6 @@ Object subclass: Game [
         self printLines: self instructionsText.
     ]
 
-    printBeckerChoice [
-        self printLines: self beckerChoiceScene.
-    ]
-
     printBeckerAfterChoice [
         self printLines: (self afterBeckerChoiceScene: beckerChoice).
     ]
@@ -435,29 +414,46 @@ Object subclass: Game [
         ^ FileStream stdin nextLine
     ]
 
+    beckerChoiceScene [
+        self printLines: #(
+            ''
+            'NAVCORE, main spaceship''s computer hums softly when it prints the response on the screen.'
+            'NAVCORE: Hello, Diagnostics Officer Pierce. Here is the report of Mission 067801'
+            '"""'
+            'Corporate command authorized the spaceship Talume to investigate a possible life form on planet 26-Draconis. Talume landed on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed left the ship to investigate. After 6 hours, Talume lost contact with Executive Officer Becker. Science Officer Reed reported unsuccessful search attempts.'
+            '"""'
+            'NAVCORE: Anything else I can do for you, Officer?'
+            'Before you can respond, the main console clears. A new line appears.'
+            'NAVCORE: Science Officer Reed has re-entered the Talume carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?'
+            ''
+            'Type either "medbay" or "isolation".'
+            ''
+        ).
+
+        beckerChoice := self readCommand.
+        [(beckerChoice = 'medbay') or: [beckerChoice = 'isolation']] whileFalse: [
+            Transcript show: 'Type either isolation or medbay'; cr.
+            beckerChoice := self readCommand.
+        ].
+
+        self printLines: (self afterBeckerChoiceScene: beckerChoice).
+        lightsOn := false.
+    ]
+
     run [
         | cmd keyPressed |
         self init.
         self printIntroduction.
         self printInstructions.
 
-        "-- TODO: make it a scene"
-        self printBeckerChoice.
-        beckerChoice := self readCommand.
-        [(beckerChoice = 'medbay') or: [beckerChoice = 'isolation']] whileFalse: [
-            Transcript show: 'Type either isolation or medbay'; cr.
-            beckerChoice := self readCommand.
-        ].
-        self printBeckerAfterChoice.
-        lightsOn := false.
-        "---"
+        self beckerChoiceScene.
 
         [isGameOver] whileFalse: [
             | isUnknown cName iName |
             isUnknown := true.
             cmd := self readCommand.
 
-            cmd = 'instructions' ifTrue: [
+            cmd = 'help' ifTrue: [
                 self printInstructions.
                 isUnknown := false
             ].

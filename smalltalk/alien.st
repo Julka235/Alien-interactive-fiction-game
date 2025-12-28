@@ -487,7 +487,28 @@ Object subclass: Game [
                     'Before you can process what''s happening, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black.'.
                     'NAVCORE-BETA: Updated report for mission 067801: Time 9036919h: Diagnostics Officer Pierce found dead.'
                 }.
+            ].
+    ]
+
+    ignoringNoisesScene [
+        reed isAlive: false.
+        countdown := 3.
+        (grabUsed)
+            ifTrue: [
+                self printLines: {
+                    '"Where are you going?" Reed asks, confused, from behind your back.'.
+                    'You ignore him. All you can think about is running from the noise — not toward it.'.
+                    '"As you wish," Reed scolds as he starts walking back toward the power room. "I''ll face it alone."'
+                }
             ]
+            ifFalse: [
+                Transcript show: 'Reed decided not to follow you after you ignored him. He probably went to face the noise alone.'; cr.
+            ].
+        self printLines: {
+            'Then, before you can do or think anything else, the spaceship alarm goes off. You hear NAVCORE automated voice through the speakers:'.
+            '"Code red. Auto-destruction sequence initiated. Completion in three minutes. All crew members proceed to the shuttle immediently."'.
+            'This means you can visit up to 3 rooms now...'
+        }.
     ]
 
     performMove: targetRoomName player: aPlayer [
@@ -557,8 +578,7 @@ Object subclass: Game [
             targetRoomName = 'PowerRoom' ifTrue: [
                 self confrontationScene.
             ] ifFalse: [
-                Transcript show: 'Scene: ignoring noises'; cr.
-                countdown := 3.
+                self ignoringNoisesScene.
             ].
         ].
 

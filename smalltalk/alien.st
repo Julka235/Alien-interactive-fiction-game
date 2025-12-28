@@ -622,10 +622,12 @@ Object subclass: Game [
             targetRoomName = 'Medbay'
                 ifTrue: [
                     self secondBodyScene.
+                    ^ self
                 ].
             targetRoomName = 'PowerRoom'
                 ifFalse: [
                     self noisePowerRoomScene.
+                    ^ self
                 ].
         ].
 

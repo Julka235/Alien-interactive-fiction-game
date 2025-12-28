@@ -51,6 +51,18 @@ Object subclass: CrewMember [
         ^super new initName: aName location: aRoom canBeGrabbed: grabFlag description: aDescription
     ]
 
+    CrewMember >> isAlive: aBoolean [
+        isAlive := aBoolean.
+    ]
+
+    CrewMember >> investigationLine: aString [
+    investigationLine := aString.
+    ]
+
+    CrewMember >> location: aRoom [
+    location := aRoom.
+    ]
+
     initName: aName location: aRoom canBeGrabbed: grabFlag description: aDescription [
         name := aName.
         location := aRoom.
@@ -83,7 +95,7 @@ Object subclass: CrewMember [
     ]
 
     investigate: player [
-        | playerLocation |
+        | playerLocation|
         playerLocation := player location.
 
         (location = playerLocation) ifFalse: [
@@ -91,10 +103,15 @@ Object subclass: CrewMember [
             ^ self.
         ].
 
+        (isAlive) ifFalse: [
+            Transcript show: 'There''s no point investigating the dead.'; cr.
+            ^ self.
+        ].
+
         investigated ifTrue: [
             Transcript show: '> ', name, ': I have nothing more to say.'; cr.
         ] ifFalse: [
-            Transcript show: investigationLine; cr.
+            investigationLine do: [:line | Transcript show: line; cr].
             investigated := true.
         ].
     ]
@@ -162,7 +179,7 @@ Object subclass: Item [
 
 
 Object subclass: Game [
-    | isGameOver rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation noisesHeard beckerChoice countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
+    | isGameOver rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation blockedInvestigation noisesHeard beckerChoice hintCounter countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
 
 
     introductionText [
@@ -188,39 +205,14 @@ Object subclass: Game [
         )
     ]
 
-    beckerChoiceScene [
-        ^ #(
-            ''
-            'NAVCORE, main spaceship''s computer hums softly when it prints the response on the screen.'
-            'NAVCORE: Hello, Diagnostics Officer Pierce. Here is the report of Mission 067801'
-            '"""'
-            'Corporate command authorized the spaceship Talume to investigate a possible life form on planet 26-Draconis. Talume landed on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed left the ship to investigate. After 6 hours, Talume lost contact with Executive Officer Becker. Science Officer Reed reported unsuccessful search attempts.'
-            '"""'
-            'NAVCORE: Anything else I can do for you, Officer?'
-            'Before you can respond, the main console clears. A new line appears.'
-            'NAVCORE: Science Officer Reed has re-entered the Talume carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?'
-            ''
-            'Type either "medbay" or "isolation".'
-            ''
-        )
-    ]
-
-    afterBeckerChoiceScene: choice [
-       ^ {
-           ''.
-           ('NAVCORE: Your choice has been recorded: ', choice, '. Command sent.').
-           'You stretch and rise from the console, planning to look for the ship''s cat, Fluff.'.
-           'As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it''s cut short.'.  "<- TUTAJ BRAKOWAŁO KROPKI"
-           'You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.'
-       }
-   ]
-
     init [
         isGameOver := false.
         lightsOn := true.
         forceInvestigation := false.
+        blockedInvestigation := false.
         noisesHeard := false.
         beckerChoice := nil.
+        hintCounter := 0.
         countdown := nil.
 
         rooms := Dictionary new.
@@ -288,6 +280,19 @@ Object subclass: Game [
                 description: 'executive officer.'.
         crew at: 'Reed' put: reed; at: 'Kendle' put: kendle; at: 'Walker' put: walker; at: 'Douglas' put: douglas; at: 'Becker' put: becker.
 
+        reed investigationLine: #(
+            'What were you doing just now, Reed?'
+            'I was running an analysis of Becker''s blood, he says. Trying to figure out how to help him... his condition isn''t improving.'
+            'Did you find anything?'
+            'Not exactly, Reed admits. But something''s wrong. His blood is more acidic than normal, and it''s not clotting at all.'
+        ).
+
+        kendle investigationLine: #(
+            'You were the first here, right, Kendle? Did you notice anything?'
+            'Not much, she says, voice trembling. The cat ran between my legs, yowling just before the scream.'
+            'I don’t know who or what could have done this.'
+        ).
+
         items := Dictionary new.
         fluff := Item name: 'Fluff' location: medbay.
         gun := Item name: 'Gun' location: storageBay.
@@ -299,6 +304,127 @@ Object subclass: Game [
                 location: technicalRoom
                 canBeGrabbed: false
                 description: 'you, the diagnostics officer.'.
+    ]
+
+    printLines: anArray [
+        anArray do: [ :string | Transcript show: string; cr ]
+    ]
+
+    printIntroduction [
+       self printLines: self introductionText.
+    ]
+
+    printInstructions [
+        self printLines: self instructionsText.
+    ]
+
+    readCommand [
+        Transcript show: '> '.
+        ^ FileStream stdin nextLine
+    ]
+
+    beckerChoiceScene [
+        self printLines: #(
+            ''
+            'NAVCORE, main spaceship''s computer hums softly when it prints the response on the screen.'
+            'NAVCORE: Hello, Diagnostics Officer Pierce. Here is the report of Mission 067801'
+            '"""'
+            'Corporate command authorized the spaceship Talume to investigate a possible life form on planet 26-Draconis. Talume landed on the surface of 26-Draconis. Executive Officer Becker and Science Officer Reed left the ship to investigate. After 6 hours, Talume lost contact with Executive Officer Becker. Science Officer Reed reported unsuccessful search attempts.'
+            '"""'
+            'NAVCORE: Anything else I can do for you, Officer?'
+            'Before you can respond, the main console clears. A new line appears.'
+            'NAVCORE: Science Officer Reed has re-entered the Talume carrying the sick and unconcious Executive Officer Becker. His spacesuit is breached. Per quarantine law, the crew must be contained. Should I send the command to move him to the medbay for treatment, or to isolation to prevent potential contamination?'
+            ''
+            'Type either "medbay" or "isolation".'
+            ''
+        ).
+
+        beckerChoice := self readCommand.
+        [(beckerChoice = 'medbay') or: [beckerChoice = 'isolation']] whileFalse: [
+            Transcript show: 'Type either isolation or medbay'; cr.
+            beckerChoice := self readCommand.
+        ].
+
+        (beckerChoice = 'isolation')
+            ifTrue: [hintCounter := hintCounter + 1].
+
+        self printLines: {
+            ''.
+           'NAVCORE: Your choice has been recorded: ', beckerChoice, '. Command sent.'
+        }.
+
+        self powerOffScene.
+    ]
+
+    powerOffScene [
+        self printLines: #(
+           'You stretch and rise from the console, planning to look for the ship''s cat, Fluff.'
+           'As you step into the corridor, the lights go out. The ship is plunged into darkness. The only sound is your own heartbeat, pounding in your ears. Your breath catches when you hear a scream - and stops entirely when it''s cut short.'
+           'You remember the emergency procedure: in a total blackout, all crew members are to gather in the living quarters.'
+       ).
+       lightsOn := false.
+   ]
+
+   firstBodyScene [
+        self printLines: {
+            'You step into the living quarters. The lights flicker back on, blinding you for a moment.'.
+            'A scream cuts through the silence - Kendle''s. As your eyes adjust, you see it: a body sprawled in the middle of the room, torn open, blood spreading across the floor like a shadow. It''s Douglas - your captain and friend.'.
+            'Only Kendle and Reed are here. With the captain dead and Becker still unconscious, the only one unaccounted for is Walker, the chief engineer - he must''ve restored the power.'.
+            'Reed turns to you, his voice tight. ''You''re the one in command now, Pierce. What do we do?'''.
+            'Do you look around the room first, or investigate one of the crew members?'
+        }.
+        lightsOn := true.
+        forceInvestigation := true.
+        douglas isAlive: false.
+    ]
+
+    walkerJoinsScene [
+        walker location: livingQuarters.
+        self printLines: {
+            'Before you can decide what to do next,  Walker - chief engineer - bursts in.'.
+            '"I fixed the po-" he stops, startled by Douglas''s dead body. "What the hell happened here?"'.
+            'The captain''s dead," Reed says. "Where have you been?"'.
+            'When the lights went out, I went to the power room to restore them, Walker explains. I didn''t expect two people to die while I was gone.'.
+            'Wait, did he just say two?'
+        }.
+        (beckerChoice = 'isolation')
+            ifTrue: [walker investigationLine: #(
+                '"I was fixing the power after it went out," he says. "Then I wanted to go straight to our quarters, but the medbay door was open and there was blood everywhere. So I went to check the isolation, and..."'
+                '"Did Becker leave quarantine?"'
+                '"Not exactly," Walker replies. "He''s still in isolation – but he''s dead, Pierce. Blood everywhere, his body torn apart. The strange thing is, no alarm went off, so it wasn''t a malfunction. Someone on the crew must have unlocked the door."'
+
+            )]
+            ifFalse: [
+                walker investigationLine: #(
+                '"What do you mean by two people, Walker?"'
+                '"I was fixing the power after it went out", he says. "Then I wanted to go straight to our quarters, but the medbay door was open. There was blood everywhere - Becker''s blood, I think. I didn''t want to investigate without you."'
+                )
+            ].
+    ]
+
+    secondBodyScene [
+        reed location: medbay.
+        hintCounter := hintCounter + 1.
+        becker isAlive: false.
+        blockedInvestigation := true.
+        noisesHeard := true.
+        self printLines: {
+            'Becker lies collapsed on the medbay floor - or rather, what''s left of him does. His body has been hollowed out completely, reduced to a deflated shell as if something had crawled inside him, worn him, and then peeled him off like clothing.The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'.
+            'A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'.
+            'A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches.'.
+            'The door swings open. Reed steps inside, pale and grim.'.
+            '"And then there were two," he whispers. "There''s one more body to find... and the killer."'.
+            '"How do I know you''re not the killer?"'.
+            '"You don''t," he admits. "But I can go with you to investigate - or you can go alone."'
+        }.
+        (hintCounter >= 2)
+            ifTrue: [
+                self printLines: {
+                    'At this point, you''re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn''t he killed you yet?'.
+                    'Better not to split up when there might be another enemy aboard.'
+                }
+            ].
+        Transcript show: 'If you want to take Reed with you, type ''Grab Reed'' before going to the next room.'; cr.
     ]
 
     performMove: targetRoomName player: aPlayer [
@@ -344,9 +470,7 @@ Object subclass: Game [
             player moveTo: targetRoom.
             targetRoomName = 'LivingQuarters'
                 ifTrue: [
-                    lightsOn := true.
-                    Transcript show: 'Scene: First Body Found'; cr.
-                    forceInvestigation := true.
+                    self firstBodyScene.
                 ]
                 ifFalse: [ Transcript show: 'You almost trip over something you cant see. Everything is still pitch black.'; cr. ].
         ].
@@ -356,8 +480,7 @@ Object subclass: Game [
             player moveTo: targetRoom.
             targetRoomName = 'Medbay'
                 ifTrue: [
-                    Transcript show: 'Scene: Second Body Found and hearing noices'; cr.
-                    noisesHeard := true.
+                    self secondBodyScene.
                 ].
             targetRoomName = 'PowerRoom'
                 ifFalse: [
@@ -394,12 +517,20 @@ Object subclass: Game [
         ].
     ]
 
-    performInvestgation: crewMemberName player: aPlayer [
+    performInvestigation: crewMemberName player: aPlayer [
         | crewMember |
         crewMember := crew at: crewMemberName ifAbsent: [
             Transcript show: 'Person not found. Use uppercase.'; cr. ^ self
         ].
+        (blockedInvestigation)
+            ifTrue: [
+                Transcript show: 'There''s no time to waste on talking now.'; cr. ^ self
+            ].
         crewMember investigate: aPlayer.
+        (crewMemberName = 'Kendle') ifTrue: [
+            forceInvestigation := false.
+            self walkerJoinsScene.
+        ].
     ]
 
     performTakingItem: itemName player: aPlayer [
@@ -410,54 +541,20 @@ Object subclass: Game [
         item takeBy: aPlayer.
     ]
 
-    printLines: anArray [
-        anArray do: [ :string | Transcript show: string; cr ]
-    ]
-
-    printIntroduction [
-       self printLines: self introductionText.
-    ]
-
-    printInstructions [
-        self printLines: self instructionsText.
-    ]
-
-    printBeckerChoice [
-        self printLines: self beckerChoiceScene.
-    ]
-
-    printBeckerAfterChoice [
-        self printLines: (self afterBeckerChoiceScene: beckerChoice).
-    ]
-
-    readCommand [
-        Transcript show: '> '.
-        ^ FileStream stdin nextLine
-    ]
-
     run [
         | cmd keyPressed |
         self init.
         self printIntroduction.
         self printInstructions.
 
-        "-- TODO: make it a scene"
-        self printBeckerChoice.
-        beckerChoice := self readCommand.
-        [(beckerChoice = 'medbay') or: [beckerChoice = 'isolation']] whileFalse: [
-            Transcript show: 'Type either isolation or medbay'; cr.
-            beckerChoice := self readCommand.
-        ].
-        self printBeckerAfterChoice.
-        lightsOn := false.
-        "---"
+        self beckerChoiceScene.
 
         [isGameOver] whileFalse: [
             | isUnknown cName iName |
             isUnknown := true.
             cmd := self readCommand.
 
-            cmd = 'instructions' ifTrue: [
+            cmd = 'help' ifTrue: [
                 self printInstructions.
                 isUnknown := false
             ].
@@ -487,7 +584,7 @@ Object subclass: Game [
 
             ((cmd indexOfSubCollection: 'investigate' startingAt: 1) > 0) ifTrue: [
                cName := (cmd copyFrom: 13 to: cmd size).
-               self performInvestgation: cName player: player.
+               self performInvestigation: cName player: player.
                isUnknown := false
             ].
 

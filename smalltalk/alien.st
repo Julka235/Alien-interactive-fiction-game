@@ -424,7 +424,7 @@ Object subclass: Game [
                     'Better not to split up when there might be another enemy aboard.'
                 }
             ].
-        Transcript show: 'If you want to take Reed with you, type ''Grab Reed'' before going to the next room.'; cr.
+        Transcript show: 'If you want to take Reed with you, type ''grab Reed'' before going to the next room.'; cr.
     ]
 
     performMove: targetRoomName player: aPlayer [
@@ -541,6 +541,14 @@ Object subclass: Game [
         item takeBy: aPlayer.
     ]
 
+    performGrab: crewMemberName player: aPlayer [
+        | crewMember |
+        crewMember := crew at: crewMemberName ifAbsent: [
+            Transcript show: 'Person not found. Use uppercase.'; cr. ^ self
+        ].
+        crewMember grab: aPlayer.
+    ]
+
     run [
         | cmd keyPressed |
         self init.
@@ -600,6 +608,12 @@ Object subclass: Game [
                self performTakingItem: iName player: player.
                isUnknown := false
            ].
+
+           ((cmd indexOfSubCollection: 'grab' startingAt: 1) > 0) ifTrue: [
+               cName := (cmd copyFrom: 6 to: cmd size).
+               self performGrab: cName player: player.
+               isUnknown := false
+            ].
 
             cmd = 'exit' ifTrue: [
                 isGameOver := true.

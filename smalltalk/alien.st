@@ -427,6 +427,28 @@ Object subclass: Game [
         Transcript show: 'If you want to take Reed with you, type ''grab Reed'' before going to the next room.'; cr.
     ]
 
+    noisePowerRoomScene [
+        reed location: player location.
+        becker isAlive: false.
+        blockedInvestigation := true.
+        noisesHeard := true.
+        self printLines: {
+            'A strange noise comes from the power room, followed by a scream. Your breath catches.'.
+            'The door swings open. Reed steps inside, pale and grim.'.
+            '"And then there were two," he whispers. "There''s one more body to find... and the killer."'.
+            '"How do I know you''re not the killer?"'.
+            '"You don''t," he admits. "But I can go with you to investigate - or you can go alone."'
+        }.
+        (hintCounter >= 2)
+            ifTrue: [
+                self printLines: {
+                    'At this point, you''re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn''t he killed you yet?'.
+                    'Better not to split up when there might be another enemy aboard.'
+                }
+            ].
+        Transcript show: 'If you want to take Reed with you, type ''grab Reed'' before going to the next room.'; cr.
+    ]
+
     performMove: targetRoomName player: aPlayer [
         | targetRoom moveActionPerformed |
 
@@ -484,8 +506,7 @@ Object subclass: Game [
                 ].
             targetRoomName = 'PowerRoom'
                 ifFalse: [
-                    Transcript show: 'Scene: hearing noices'; cr.
-                    noisesHeard := true.
+                    self noisePowerRoomScene.
                 ].
         ].
 

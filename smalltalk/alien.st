@@ -179,7 +179,7 @@ Object subclass: Item [
 
 
 Object subclass: Game [
-    | isGameOver rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation noisesHeard beckerChoice hintCounter countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
+    | isGameOver rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation blockedInvestigation noisesHeard beckerChoice hintCounter countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
 
 
     introductionText [
@@ -209,6 +209,7 @@ Object subclass: Game [
         isGameOver := false.
         lightsOn := true.
         forceInvestigation := false.
+        blockedInvestigation := false.
         noisesHeard := false.
         beckerChoice := nil.
         hintCounter := 0.
@@ -401,6 +402,31 @@ Object subclass: Game [
             ].
     ]
 
+    secondBodyScene [
+        reed location: medbay.
+        hintCounter := hintCounter + 1.
+        becker isAlive: false.
+        blockedInvestigation := true.
+        noisesHeard := true.
+        self printLines: {
+            'Becker lies collapsed on the medbay floor - or rather, what''s left of him does. His body has been hollowed out completely, reduced to a deflated shell as if something had crawled inside him, worn him, and then peeled him off like clothing.The black substance from before slicks every surface, thicker now, spreading across the tiles like living oil.'.
+            'A faint meow breaks the silence. Fluff peers out from a cupboard, fur bristling, eyes locked on the floor as if urging you to notice something. You follow his gaze and spot a discarded multitool beside the cupboard.'.
+            'A sudden scream echoes from the power room, followed by a harsh mechanical noise. Your breath catches.'.
+            'The door swings open. Reed steps inside, pale and grim.'.
+            '"And then there were two," he whispers. "There''s one more body to find... and the killer."'.
+            '"How do I know you''re not the killer?"'.
+            '"You don''t," he admits. "But I can go with you to investigate - or you can go alone."'
+        }.
+        (hintCounter >= 2)
+            ifTrue: [
+                self printLines: {
+                    'At this point, you''re certain someone on the crew is working with the alien. It could be Reed - but if it were, why hasn''t he killed you yet?'.
+                    'Better not to split up when there might be another enemy aboard.'
+                }
+            ].
+        Transcript show: 'If you want to take Reed with you, type ''Grab Reed'' before going to the next room.'; cr.
+    ]
+
     performMove: targetRoomName player: aPlayer [
         | targetRoom moveActionPerformed |
 
@@ -454,8 +480,7 @@ Object subclass: Game [
             player moveTo: targetRoom.
             targetRoomName = 'Medbay'
                 ifTrue: [
-                    Transcript show: 'Scene: Second Body Found and hearing noices'; cr.
-                    noisesHeard := true.
+                    self secondBodyScene.
                 ].
             targetRoomName = 'PowerRoom'
                 ifFalse: [
@@ -497,6 +522,10 @@ Object subclass: Game [
         crewMember := crew at: crewMemberName ifAbsent: [
             Transcript show: 'Person not found. Use uppercase.'; cr. ^ self
         ].
+        (blockedInvestigation)
+            ifTrue: [
+                Transcript show: 'There''s no time to waste on talking now.'; cr. ^ self
+            ].
         crewMember investigate: aPlayer.
         (crewMemberName = 'Kendle') ifTrue: [
             forceInvestigation := false.

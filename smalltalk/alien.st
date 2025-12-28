@@ -63,6 +63,10 @@ Object subclass: CrewMember [
     location := aRoom.
     ]
 
+    CrewMember >> isGrabbed [
+    ^ isGrabbed
+    ]   
+
     initName: aName location: aRoom canBeGrabbed: grabFlag description: aDescription [
         name := aName.
         location := aRoom.
@@ -179,7 +183,7 @@ Object subclass: Item [
 
 
 Object subclass: Game [
-    | isGameOver rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation blockedInvestigation noisesHeard beckerChoice hintCounter countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
+    | isGameOver win rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation blockedInvestigation noisesHeard grabUsed beckerChoice hintCounter countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
 
 
     introductionText [
@@ -207,10 +211,12 @@ Object subclass: Game [
 
     init [
         isGameOver := false.
+        win := false.
         lightsOn := true.
         forceInvestigation := false.
         blockedInvestigation := false.
         noisesHeard := false.
+        grabUsed := false.
         beckerChoice := nil.
         hintCounter := 0.
         countdown := nil.
@@ -449,6 +455,41 @@ Object subclass: Game [
         Transcript show: 'If you want to take Reed with you, type ''grab Reed'' before going to the next room.'; cr.
     ]
 
+    confrontationScene [
+        (grabUsed)
+            ifTrue: [
+                walker location: powerRoom.
+                reed location: powerRoom.
+                walker isAlive: false.
+                reed isAlive: false.
+                shuttleLocked := false.
+                countdown := 3.
+                self printLines: {
+                    'Cold hands clamp around your throat - it''s Walker.'.
+                    'Reed swings a metal pipe, but Walker catches him mid-strike and slams him into the console. A sickening crack echoes as Reed''s body crumples to the floor, his neck bent at an unnatural angle.'.
+                    'You kick Walker back into NAVCORE-BETA; sparks explode as his head smashes through the screen, wires spilling from the wound instead of blood'.
+                    '"You\''re... an android?" you gasp."Why are you sabotaging our mission?"'.
+                    '"The organism must survive," he rasps, voice glitching. "We need to test it further."'.
+                    'He convulses violently, circuits flaring, and NAVCORE-BETA''s lights turn red.'.
+                    'You hear NAVCORE''s automated voice through the speakers:'.
+                    '"Code red. Auto-destruction sequence initiated.'.
+                    'Completion in three minutes. All crew members proceed to the shuttle immediently."'.
+                    'Somewhere in the ship, you think you hear Fluff''s distant yowl - a reminder that not everything worth saving here is human.'.
+                    'You have only three minutes to get off this ship... That means you can visit up to three rooms, including the shuttle. Grab what you need quickly and make your way to the shuttle!'
+                }.
+            ]
+            ifFalse: [
+                walker location: powerRoom.
+                isGameOver := true.
+                win := false.
+                self printLines: {
+                    'It''s empty - nobody in sight.'.
+                    'Before you can process what''s happening, a gun presses against the back of your head. The safety clicks, a loud BANG echoes - and everything goes black.'.
+                    'NAVCORE-BETA: Updated report for mission 067801: Time 9036919h: Diagnostics Officer Pierce found dead.'
+                }.
+            ]
+    ]
+
     performMove: targetRoomName player: aPlayer [
         | targetRoom moveActionPerformed |
 
@@ -514,9 +555,7 @@ Object subclass: Game [
             moveActionPerformed := true.
             player moveTo: targetRoom.
             targetRoomName = 'PowerRoom' ifTrue: [
-                Transcript show: 'Scene: confrontationScene'; cr.
-                countdown := 3.
-                shuttleLocked := false.
+                self confrontationScene.
             ] ifFalse: [
                 Transcript show: 'Scene: ignoring noises'; cr.
                 countdown := 3.
@@ -568,6 +607,9 @@ Object subclass: Game [
             Transcript show: 'Person not found. Use uppercase.'; cr. ^ self
         ].
         crewMember grab: aPlayer.
+        (reed isGrabbed) ifTrue: [
+            grabUsed := true
+        ].
     ]
 
     run [
@@ -645,6 +687,13 @@ Object subclass: Game [
                 self printLines: #('Unknown command.')
             ].
         ].
+        (win)
+            ifTrue: [
+                Transcript show: 'Congrats! You and Fluff have survived the alien attack Hope to see you on the next mission, Officer.'; cr. ^ self
+            ]
+            ifFalse: [
+                Transcript show: 'GAME OVER. Hope you join the Talume again soon.'; cr. ^ self
+            ]
     ]
 ]
 

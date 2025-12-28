@@ -25,6 +25,10 @@ Object subclass: Room [
         ^ name
     ]
 
+    isOpen: aBoolean [
+        isOpen := aBoolean.
+    ]
+
     canPlayerEnter [
         ^ isOpen
     ]
@@ -163,6 +167,10 @@ Object subclass: Item [
         ^ name
     ]
 
+    isTaken [
+        ^ isTaken
+    ]
+
     takeBy: player [
         isTaken
             ifTrue: [
@@ -183,7 +191,7 @@ Object subclass: Item [
 
 
 Object subclass: Game [
-    | isGameOver win rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation blockedInvestigation noisesHeard grabUsed beckerChoice hintCounter countdown reed kendle walker douglas becker fluff gun multitool shuttleLocked |
+    | isGameOver win rooms items crew player medbay powerRoom technicalRoom livingQuarters storageBay shuttle lightsOn forceInvestigation blockedInvestigation noisesHeard grabUsed beckerChoice hintCounter countdown holdingGun holdingFluff reed kendle walker douglas becker fluff gun multitool shuttleLocked |
 
 
     introductionText [
@@ -220,6 +228,8 @@ Object subclass: Game [
         beckerChoice := nil.
         hintCounter := 0.
         countdown := nil.
+        holdingGun := false.
+        holdingFluff := false.
 
         rooms := Dictionary new.
         medbay := Room
@@ -463,6 +473,7 @@ Object subclass: Game [
                 walker isAlive: false.
                 reed isAlive: false.
                 shuttleLocked := false.
+                shuttle isOpen: true.
                 countdown := 3.
                 self printLines: {
                     'Cold hands clamp around your throat - it''s Walker.'.
@@ -511,6 +522,52 @@ Object subclass: Game [
         }.
     ]
 
+    autoDestructionScene [
+        isGameOver := true.
+        win := false.
+        self printLines: {
+            'You run out of time.'.
+            'NAVCORE''s automated voice counts down: "Auto-destruction begins in 3... 2... 1...".'.
+            'Silence follows. Then everything ends.'
+        }.
+    ]
+
+    enterShuttleScene [
+        Transcript show: 'You reach the shuttle just in time and take off.'; cr.
+        (holdingFluff and: [ holdingGun ])
+            ifTrue: [
+                self printLines: {
+                    'You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule.'.
+                    'Fluff hisses at the food cupboard. Your heart race - you realize the alien has made it abroad.'.
+                    'Quickly, you grab your gun and keep it ready.'.
+                    'When the alien lunges, you fire, blasting all the bullets.'.
+                    'Finally, you disarm yourself and settle into stasis, Fluff safe by your side.'
+                }.
+                isGameOver := true.
+                win := true.
+            ]
+            ifFalse: [
+                (holdingFluff)
+                    ifTrue: [
+                       self printLines: {
+                            'You update the mission report, then prepare for stasis. As you settle into the capsule, exhaustion takes over.'.
+                            'Fluff suddenly hisses at the food cupboard. Your stomach drops. The alien is here - with you. Cold sweat runs down your face as you realize you have nothing to defend yourself.'.
+                            'The cupboard bursts open. The creature lunges, sinking its jaws into your neck before you can even scream.'
+                        }.
+                        isGameOver := true.
+                        win := false. 
+                    ]
+                    ifFalse: [
+                        self printLines: {
+                            'You update the mission report, then prepare for stasis. Exhausted, you climb into the capsule and close your eyes.'.
+                            'You never see it coming - razor-sharp claws tear through your stomach. The alien made it aboard, hidden where you didn''t notice. Before you can even scream, your throat is ripped open.'
+                        }.
+                        isGameOver := true.
+                        win := false. 
+                    ]
+            ].
+    ]
+
     performMove: targetRoomName player: aPlayer [
         | targetRoom moveActionPerformed |
 
@@ -527,8 +584,8 @@ Object subclass: Game [
                 Transcript show: 'The shuttle doors are closed. They shouldnt be - but the saboteur you failed to catch must have locked them. You remember the capitan also had the key. You run to headquarters and grab it. The whole ordeal takes over two minutes though...'; cr.
                 countdown := countdown - 2.
                 (countdown < 0)
-                    ifTrue: [ Transcript show: 'TODO: autodestruction scene.'; cr. isGameOver := true. ]
-                    ifFalse: [ Transcript show: 'TODO: Enter shuttle scene'; cr. player moveTo: targetRoom. ].
+                    ifTrue: [ self autoDestructionScene. ^ self ]
+                    ifFalse: [ self enterShuttleScene. player moveTo: targetRoom. ^ self].
             ].
             moveActionPerformed := true.
         ].
@@ -587,10 +644,12 @@ Object subclass: Game [
             countdown notNil ifTrue: [
                 countdown := countdown - 1.
                 targetRoomName = 'Shuttle' ifTrue: [
-                    Transcript show: 'Scene: enter shuttle'; cr.
+                    self enterShuttleScene.
+                    ^ self
                 ].
                 countdown <= 0 ifTrue: [
-                    Transcript show: 'Scene: autoDestructionScene'; cr.
+                    self autoDestructionScene.
+                    ^ self
                 ].
                 Transcript show: 'Player can go to max 3 rooms, with shuttle space being the last. Current counter: ', countdown printString, '.'; cr.
             ].
@@ -619,6 +678,14 @@ Object subclass: Game [
             Transcript show: 'Item not found. Use uppercase.'; cr. ^ self
         ].
         item takeBy: aPlayer.
+        (fluff isTaken)
+            ifTrue: [
+                holdingFluff := true
+            ].
+        (gun isTaken)
+            ifTrue: [
+                holdingGun := true
+            ].
     ]
 
     performGrab: crewMemberName player: aPlayer [

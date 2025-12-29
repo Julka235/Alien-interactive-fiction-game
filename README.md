@@ -50,4 +50,9 @@ swipl alien.pl
 ghc alien.hs -o alien
 ./alien
 ```
+### Smalltalk
+```
+gst alien.pl
+```
+
 Enjoy the game :)
